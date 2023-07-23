@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.router import router as auth_router
+from src.tk_api.router import router as tk_router
 from src.database import async_session_maker
 from src.models import Stock
 
@@ -20,6 +21,7 @@ from src.models import Stock
 app = FastAPI(title="TrackFolio")
 
 app.include_router(auth_router)
+app.include_router(tk_router)
 
 templates = Jinja2Templates("src/templates")
 
