@@ -11,6 +11,7 @@ from alembic import context
 from src.config import settings
 from src.database import Base
 from src.auth.models import *
+from src.models import *
 
 imports = {
     "import fastapi_users_db_sqlalchemy",

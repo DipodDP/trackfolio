@@ -1,23 +1,55 @@
 # from typing import Annotated, List, Optional
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Request
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.auth.router import router as auth_router
+from src.database import async_session_maker
+from src.models import Stock
+
 # from fastapi import Depends, FastAPI, Request, status
 # from fastapi.encoders import jsonable_encoder
 # from fastapi.responses import JSONResponse
 # from pydantic import ValidationError
-
-from src.auth.router import router as auth_router
 
 
 app = FastAPI(title="TrackFolio")
 
 app.include_router(auth_router)
 
+templates = Jinja2Templates("src/templates")
+
+
+class StockRequest(BaseModel):
+    symbol: str
+
+
+async def get_db():
+    async with async_session_maker() as session:
+        yield session
+
 
 @app.get("/")
-def hello():
-    return {"message": "Hello from TracFolio!"}
+def home(request: Request):
+    return templates.TemplateResponse(
+        "home/dashboard.html",
+        {
+            "request": request,
+        },
+    )
+
+
+@app.post("/stock")
+async def create_stock(request: StockRequest, db: AsyncSession = Depends(get_db)):
+    stock = Stock()
+    stock.symbol = request.symbol
+    db.add(stock)
+    await db.commit()
+
+    return {"code": "success", "message": "stock_created"}
 
 
 def start():

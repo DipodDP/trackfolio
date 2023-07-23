@@ -17,7 +17,9 @@ engine = create_async_engine(
     settings.db_url,
     poolclass=NullPool,
     future=True,
+    # verbose output of DB operations
     echo=True,
+    # autocommit (not need to use db.commit())
     execution_options={"isolation_level": "AUTOCOMMIT"},
 )
 async_session_maker = async_sessionmaker(
