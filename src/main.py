@@ -1,7 +1,8 @@
 # from typing import Annotated, List, Optional
 
+from sqlalchemy import select
 import uvicorn
-from fastapi import Depends, FastAPI, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,12 +43,29 @@ def home(request: Request):
     )
 
 
+async def fetch_stock_data(id: int):
+    query = select(Stock).filter(Stock.id == id)
+    async with async_session_maker() as session:
+        async with session.begin():
+            result = await session.execute(query)
+            stock = result.first()
+            if stock is not None:
+                print(stock)
+                print(stock[0])
+                stock[0].forward_pe = 10
+                session.add(stock[0])
+
+
 @app.post("/stock")
-async def create_stock(request: StockRequest, db: AsyncSession = Depends(get_db)):
+async def create_stock(request: StockRequest,
+                       background_tasks: BackgroundTasks,
+                       db: AsyncSession = Depends(get_db),
+                       ):
     stock = Stock()
     stock.symbol = request.symbol
     db.add(stock)
     await db.commit()
+    background_tasks.add_task(fetch_stock_data, stock.id)
 
     return {"code": "success", "message": "stock_created"}
 
