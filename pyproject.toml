@@ -15,8 +15,9 @@ alembic = "^1.11.1"
 # uvicorn = {extras = ["standard"], version = "^0.22.0"}
 fastapi = "<0.101.0"
 # tinkoff-investments = "^0.2.0b58"
-pydantic-extra-types = "<2.0.0"
-tinkoff-investments = "^0.2.0b58"
+# tinkoff = "^0.1.1"
+# pydantic-settings = "^2.0.2"
+tinkoff-investments = {git = "https://github.com/Tinkoff/invest-python"}
 
 [tool.poetry.group.dev.dependencies]
 # fastapi = {extras = ["all"], version = "^0.100.0"}
