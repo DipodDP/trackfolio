@@ -20,7 +20,6 @@ fastapi = "<0.101.0"
 tinkoff-investments = {git = "https://github.com/Tinkoff/invest-python"}
 
 [tool.poetry.group.dev.dependencies]
-# fastapi = {extras = ["all"], version = "^0.100.0"}
 # aiosqlite = "^0.19.0"
 # fastapi = {extras = ["all"], version = "^0.100.0"}
 fastapi = {version = "<0.101.0", extras = ["all"]}
