@@ -1,6 +1,9 @@
 from typing import List
 from pydantic import BaseModel
+import pydantic
+from tinkoff.invest import Account, AccountType, GetAccountsResponse
 
 
-class ClientAccounts(BaseModel):
-    accounts: List[str]
+@pydantic.dataclasses.dataclass
+class ClientAccounts(Account):
+   ... 

@@ -1,9 +1,11 @@
+from typing import List
 from fastapi import APIRouter
-from tinkoff.invest import AsyncClient
+from tinkoff.invest import Account, AsyncClient
 
 from src.config import settings
+# from src.tk_api.schemas import ClientAccount
 
-
+# Account
 TOKEN = settings.invest_token
 router = APIRouter()
 

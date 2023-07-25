@@ -13,17 +13,14 @@ asyncpg = "^0.28.0"
 fastapi-users = {extras = ["sqlalchemy"], version = "^12.1.0"}
 alembic = "^1.11.1"
 # uvicorn = {extras = ["standard"], version = "^0.22.0"}
-fastapi = "<0.101.0"
 # tinkoff-investments = "^0.2.0b58"
-# tinkoff = "^0.1.1"
-# pydantic-settings = "^2.0.2"
 tinkoff-investments = {git = "https://github.com/Tinkoff/invest-python"}
+pydantic-settings = "^2.0.2"
+fastapi = "^0.100.0"
 
 [tool.poetry.group.dev.dependencies]
-# fastapi = {extras = ["all"], version = "^0.100.0"}
-# aiosqlite = "^0.19.0"
-# fastapi = {extras = ["all"], version = "^0.100.0"}
-fastapi = {version = "<0.101.0", extras = ["all"]}
+aiosqlite = "^0.19.0"
+fastapi = {extras = ["all"], version = "^0.100.0"}
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.0"
