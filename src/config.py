@@ -9,8 +9,8 @@ import os
 from dotenv import load_dotenv
 
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(basedir, '../.env'))
+basedir = os.path.abspath(os.path.dirname('__main__'))
+load_dotenv(os.path.join(basedir, '.env'))
 
 
 # class Settings(BaseSettings):
@@ -25,7 +25,7 @@ class Settings():
     # sandbox_invest_token: str
     auth_key: str = os.environ.get('AUTH_KEY') or '\xbf\xb0\x11\xb1\xcd\xf9\xba\x8bp\x0c...'
     db_url: str = os.environ.get('DB_URL') or "sqlite+aiosqlite:///" + os.path.join(basedir, "app.db")
-    test_db_url: str = os.environ.get('TEST_DB_URL') or "sqlite+aiosqlite:///" + os.path.join(basedir, "test_app.db")
+    test_db_url: str | None = os.environ.get('TEST_DB_URL')
     invest_token = os.environ.get('INVEST_TOKEN')
     sandbox_invest_token = os.environ.get('SANDBOX_INVEST_TOKEN')
     #
