@@ -1,18 +1,33 @@
-from typing import List
 from fastapi import APIRouter
-from tinkoff.invest import Account, AsyncClient
 
 from src.config import settings
-# from src.tk_api.schemas import ClientAccount
+from src.tk_api.service.client import TinkoffClientService
 
 # Account
-TOKEN = settings.invest_token
+
+if settings.sandbox:
+    TOKEN = settings.sandbox_invest_token
+    ACCOUNT_ID = '482ad8a0-55a2-4a3d-9487-26c7fa3b5296'
+else:
+    TOKEN = settings.invest_token
+    ACCOUNT_ID = '2168069710'
+
+# todo: delete
+print(TOKEN)
+print(ACCOUNT_ID)
+
 router = APIRouter()
 
 
 @router.get('/client')
 async def get_client():
-    async with AsyncClient(TOKEN) as client:
-        accounts = await client.users.get_accounts()
+    async with TinkoffClientService(TOKEN, settings.sandbox) as client:
+        accounts = await client.get_accounts()
+    return accounts
 
-    return accounts.accounts
+
+@router.get('/portfolio')
+async def get_portfolio():
+    async with TinkoffClientService(TOKEN, settings.sandbox) as client:
+        portfoio = await client.get_portfolio(ACCOUNT_ID)
+    return portfoio
