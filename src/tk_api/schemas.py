@@ -1,9 +1,17 @@
-from typing import List
+from typing import Any, List
 from pydantic import BaseModel
-import pydantic
-from tinkoff.invest import Account, AccountType, GetAccountsResponse
+# from tinkoff.invest import Account, GetAccountsResponse
 
 
-@pydantic.dataclasses.dataclass
-class ClientAccounts(Account):
-   ... 
+class ClientAccounts(BaseModel):
+    accounts: List[Any]
+
+
+class Share(BaseModel):
+    ticker: str = ""
+    lot: int = 1
+    short_enabled_flag: bool = False
+    otc_flag: bool = False
+    buy_available_flag: bool = False
+    sell_available_flag: bool = False
+    api_trade_available_flag: bool = False

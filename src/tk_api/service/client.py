@@ -3,38 +3,6 @@ import asyncio
 from tinkoff.invest import AsyncClient, GetAccountsResponse, PortfolioResponse
 from tinkoff.invest.async_services import AsyncServices
 
-# class TinkoffClient:
-#     """
-#     Wrapper for tinkoff.invest.AsyncClient.
-#     Takes responsibility for choosing correct function to call basing on sandbox mode flag.
-#     """
-#
-#     def __init__(self, token: str, sandbox: bool = True):
-#         self.token = token
-#         self.sandbox = sandbox
-#         self.client: AsyncServices | None = None
-#
-#     async def init_async(self):
-#         self.client = await AsyncClient(
-#             token=self.token, app_name="tracfolio"
-#         ).__aenter__()
-#
-#     async def get_accounts(self) -> GetAccountsResponse:
-#         if not self.client:
-#             # todo: implement custom error
-#             raise ValueError("No client initialized")
-#         if self.sandbox:
-#             return await self.client.sandbox.get_sandbox_accounts()
-#         return await self.client.users.get_accounts()
-#
-#     async def get_portfolio(self):
-#         if not self.client:
-#             # todo: implement custom error
-#             raise ValueError("No client initialized")
-#         if self.sandbox:
-#             return await self.client.sandbox.get_sandbox_portfolio()
-#         return await self.client.users.get_accounts()
-
 
 class TinkoffClientService:
     """
