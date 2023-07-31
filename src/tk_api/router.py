@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from tinkoff.invest import InstrumentIdType
 
 from src.config import settings
-from src.tk_api.schemas import ClientAccounts
+from src.tk_api.schemas import ClientAccounts, SandboxTopupRequest
 from src.tk_api.service.client import TinkoffClientService
 
 # Account
@@ -45,6 +45,12 @@ async def get_instrument(figi: str):
         )
     return instrument
 
+
+@router.post('/sandbox')
+async def sandbox_topup(request: SandboxTopupRequest):
+    async with TinkoffClientService(TOKEN, settings.sandbox) as client:
+        response = await client.add_money_sandbox(ACCOUNT_ID, request.amount)
+    return response
 
 # @router.get('/portfolio/currencies')
 # async def get_currencies():

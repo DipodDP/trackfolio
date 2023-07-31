@@ -15,3 +15,6 @@ class Share(BaseModel):
     buy_available_flag: bool = False
     sell_available_flag: bool = False
     api_trade_available_flag: bool = False
+
+class SandboxTopupRequest(BaseModel):
+    amount: str | int | float
