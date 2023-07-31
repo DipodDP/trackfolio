@@ -73,7 +73,7 @@ async def create_stock(request: StockRequest,
 
 
 def start():
-    """Launched with `poetry run start` at root level"""
+    """Launch with `poetry run start` at root level"""
     uvicorn.run(
         "src.main:app", reload=True, host="0.0.0.0", port=5000, log_level="info"
     )

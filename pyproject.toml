@@ -17,6 +17,7 @@ alembic = "^1.11.1"
 tinkoff-investments = {git = "https://github.com/Tinkoff/invest-python"}
 pydantic-settings = "^2.0.2"
 fastapi = "^0.100.0"
+pandas = "^2.0.3"
 
 [tool.poetry.group.dev.dependencies]
 aiosqlite = "^0.19.0"

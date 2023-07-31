@@ -27,21 +27,33 @@ class TinkoffClientService:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         return await self.client.__aexit__(exc_type, exc_val, exc_tb)
 
+
+class AccountService(TinkoffClientService):
+    """
+    Wrapper for tinkoff.invest.AsyncClient accounts methods.
+    Takes responsibility for choosing correct function to call basing on
+    sandbox mode flag.
+    """
+
     async def add_money_sandbox(self, account_id: str, money, currency="rub"):
         """Function to add money to sandbox account."""
         money = decimal_to_quotation(Decimal(money))
         if self.sandbox:
             return await self.servicies.sandbox.sandbox_pay_in(
                 account_id=account_id,
-                amount=MoneyValue(units=money.units, nano=money.nano, currency=currency),
+                amount=MoneyValue(units=money.units,
+                                  nano=money.nano, currency=currency),
             )
-        else: return None
+        else:
+            return None
 
     async def close_sandbox_account(self, account_id: str):
+        """Function to close sandbox account by account_id."""
         if self.sandbox:
             return await self.servicies.sandbox.close_sandbox_account(account_id=account_id)
 
     async def get_accounts(self) -> GetAccountsResponse:
+        """Function to get all client accounts."""
         if self.sandbox:
             sandbox_accounts = await self.servicies.sandbox.get_sandbox_accounts()
             if len(sandbox_accounts.accounts) == 0:
@@ -55,11 +67,8 @@ class TinkoffClientService:
             return sandbox_accounts
         return await self.servicies.users.get_accounts()
 
-    async def get_portfolio(self, account_id: str, **kwargs) -> PortfolioResponse:
+    async def get_portfolio(self, account_id: str) -> PortfolioResponse:
+        """Function to get account portfolio."""
         if self.sandbox:
-            return await self.servicies.sandbox.get_sandbox_portfolio(
-                account_id=account_id, **kwargs
-            )
-        return await self.servicies.operations.get_portfolio(
-            account_id=account_id, **kwargs
-        )
+            return await self.servicies.sandbox.get_sandbox_portfolio(account_id=account_id)
+        return await self.servicies.operations.get_portfolio(account_id=account_id)

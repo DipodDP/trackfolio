@@ -3,7 +3,8 @@ from tinkoff.invest import InstrumentIdType
 
 from src.config import settings
 from src.tk_api.schemas import ClientAccounts, SandboxTopupRequest
-from src.tk_api.service.client import TinkoffClientService
+from src.tk_api.service.client import AccountService, TinkoffClientService
+from src.tk_api.service.instruments import InstrumentsService
 
 # Account
 if settings.sandbox:
@@ -22,7 +23,7 @@ router = APIRouter()
 
 @router.get('/client')
 async def get_client() -> ClientAccounts:
-    async with TinkoffClientService(TOKEN, settings.sandbox) as client:
+    async with AccountService(TOKEN, settings.sandbox) as client:
         accounts = await client.get_accounts()
     return ClientAccounts(
         accounts=accounts.accounts
@@ -31,24 +32,28 @@ async def get_client() -> ClientAccounts:
 
 @router.get('/portfolio')
 async def get_portfolio():
-    async with TinkoffClientService(TOKEN, settings.sandbox) as client:
+    async with AccountService(TOKEN, settings.sandbox) as client:
         portfoio = await client.get_portfolio(ACCOUNT_ID)
     return portfoio
 
 
 @router.get('/portfolio/{figi}')
 async def get_instrument(figi: str):
-    async with TinkoffClientService(TOKEN, settings.sandbox) as client:
-        instrument = await client.servicies.instruments.share_by(
-                id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI,
-                id=figi
-        )
+    async with InstrumentsService(TOKEN, settings.sandbox) as client:
+        instrument = await client.get_share(figi)
+    return instrument
+
+
+@router.get('/ticker/{ticker}')
+async def get_instrument_by_ticker(ticker: str):
+    async with InstrumentsService(TOKEN, settings.sandbox) as client:
+        instrument = await client.get_instrument_by_ticker(ticker)
     return instrument
 
 
 @router.post('/sandbox')
 async def sandbox_topup(request: SandboxTopupRequest):
-    async with TinkoffClientService(TOKEN, settings.sandbox) as client:
+    async with AccountService(TOKEN, settings.sandbox) as client:
         response = await client.add_money_sandbox(ACCOUNT_ID, request.amount)
     return response
 
