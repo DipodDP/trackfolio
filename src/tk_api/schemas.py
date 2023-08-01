@@ -1,5 +1,6 @@
 from typing import Any, List
 from pydantic import BaseModel
+# from tinkoff.invest import OrderDirection, OrderType, Quotation
 # from tinkoff.invest import Account, GetAccountsResponse
 
 
@@ -19,3 +20,14 @@ class ShareSchema(BaseModel):
 
 class SandboxTopupRequest(BaseModel):
     amount: str | int | float
+
+class OrderRequest(BaseModel):
+    account_id: str
+    figi: str
+    count_lots: int
+    # price: Quotation | None
+    is_buy: bool
+    # order_type: OrderType
+
+# class OrderResponse(BaseModel):
+
