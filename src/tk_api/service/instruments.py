@@ -1,9 +1,8 @@
-from typing import Any, List
-from pandas import DataFrame
-from tinkoff.invest import Client, InstrumentIdType, Share
+from pandas import pandas as pd
+from tinkoff.invest import Client, InstrumentIdType, InstrumentType
 from tinkoff.invest.caching.instruments_cache.instruments_cache import InstrumentsCache
 from tinkoff.invest.caching.instruments_cache.settings import InstrumentsCacheSettings
-from src.tk_api.schemas import ShareSchema
+# from src.tk_api.schemas import ShareSchema
 from src.tk_api.service.client import TinkoffClientService
 
 
@@ -15,36 +14,55 @@ class InstrumentsService(TinkoffClientService):
     """
     instruments_cache: InstrumentsCache | None = None
 
-    def _get_instruments_cache(self):
-        """Function to get instruments cache"""
+    def _store_instruments_cache(self):
+        """Function to store instruments cache"""
         with Client(self.token) as client:
             settings = InstrumentsCacheSettings()
             type(self).instruments_cache = InstrumentsCache(
                 settings=settings, instruments_service=client.instruments
             )
 
-    def _get_instruments(self) -> List[Share] | None:
-        """Function to get instruments from cache"""
-        if not self.instruments_cache:
-            print(self.instruments_cache)
-            self._get_instruments_cache()
-        if self.instruments_cache:
-            response = self.instruments_cache.shares()
-            return response.instruments
-        else:
-            return None
-
-    async def get_instrument_by_ticker(self, ticker: "str"):
-        """Function to get instrument by ticker"""
-        shares = self._get_instruments()
-        # todo: maybe it should cache dataframe somehow
-        df = DataFrame(shares)
+    async def get_figi_by_ticker(self, ticker: "str") -> tuple[str | None, str | None]:
+        """
+        Function to get instrument by ticker from stored dataframe or
+        from tinkoff-invest API
+        """
+        # todo: cache dataframe in database or in class attribute
+        try:
+            df = pd.read_csv('./instruments.csv')
+            print(df.head())
+        except FileNotFoundError:
+            items_list = []
+            if not self.instruments_cache:
+                self._store_instruments_cache()
+            for method in ['shares', 'bonds', 'etfs']:  # , 'currencies', 'futures']:
+                for item in getattr(self.instruments_cache, method)().instruments:
+                    items_list.append({
+                        'ticker': item.ticker,
+                        'figi': item.figi,
+                        'type': method,
+                        'name': item.name,
+                    })
+            df = pd.DataFrame(items_list)
+            df.to_csv('./instruments.csv', index=False)
+            print(df.head())
         df = df[df['ticker'] == ticker.upper()]
         if df.empty:
-            return None
+            return (None, None)
         else:
-            # return df.to_dict()
-            return await self.get_share(str(df['figi'].iloc[0]))
+            figi, type = df[['figi', 'type']].iloc[0]
+            return (figi, type)
+
+    async def get_instrument_by_ticker(self, ticker: "str"):
+        figi, type = await self.get_figi_by_ticker(ticker)
+        if figi is not None and type is not None:
+            type = type.removesuffix('s')+'_by'
+            print(getattr(self.servicies.instruments, type)())
+            response = await getattr(self.servicies.instruments, type)(
+                id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI,
+                id=figi
+            )
+            return response
 
     async def get_share(self, figi: str):
         response = await self.servicies.instruments.share_by(
@@ -64,6 +82,13 @@ class InstrumentsService(TinkoffClientService):
         #     api_trade_available_flag=share.api_trade_available_flag
         # )
 
-
-# InstrumentService().servicies.instruments
-
+    async def instrument_find(self,
+                              query: str,
+                              instrument_kind: InstrumentType | None = None,
+                              api_trade_available_flag: bool | None = None):
+        response = await self.servicies.instruments.find_instrument(
+            query=query,
+            instrument_kind=instrument_kind,
+            api_trade_available_flag=api_trade_available_flag
+        )
+        return response

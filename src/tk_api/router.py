@@ -53,17 +53,25 @@ async def get_instrument_by_ticker(ticker: str):
     return instrument
 
 
+@router.get('/find/{query}')
+async def find_instrument(query: str):
+    async with InstrumentsService(TOKEN, settings.sandbox) as client:
+        instrument = await client.instrument_find(query)
+    return instrument
+
+
 @router.post('/sandbox')
 async def sandbox_topup(request: SandboxTopupRequest):
     async with AccountService(TOKEN, settings.sandbox) as client:
         response = await client.add_money_sandbox(ACCOUNT_ID, request.amount)
     return response
 
+
 @router.post('/portfolio')
 async def post_market_order(request: OrderRequest):
     async with OrdersService(TOKEN, settings.sandbox) as client:
         order = await client.post_market_order(
-            figi = request.figi,
+            figi=request.figi,
             account_id=ACCOUNT_ID,
             count_lots=request.count_lots,
             is_buy=request.is_buy
