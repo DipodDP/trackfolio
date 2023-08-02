@@ -20,7 +20,7 @@ class TinkoffClientService:
         self.servicies: AsyncServices
 
     async def __aenter__(self):
-        self.client = AsyncClient(token=self.token, app_name="tracfolio")
+        self.client = AsyncClient(token=self.token, app_name="trackfolio")
         self.servicies = await self.client.__aenter__()
         return self
 
@@ -36,7 +36,7 @@ class AccountService(TinkoffClientService):
     """
 
     async def add_money_sandbox(self, account_id: str, money, currency="rub"):
-        """Function to add money to sandbox account."""
+        """Method to add money to sandbox account."""
         money = decimal_to_quotation(Decimal(money))
         if self.sandbox:
             return await self.servicies.sandbox.sandbox_pay_in(
@@ -48,12 +48,12 @@ class AccountService(TinkoffClientService):
             return None
 
     async def close_sandbox_account(self, account_id: str):
-        """Function to close sandbox account by account_id."""
+        """Method to close sandbox account by account_id."""
         if self.sandbox:
             return await self.servicies.sandbox.close_sandbox_account(account_id=account_id)
 
     async def get_accounts(self) -> GetAccountsResponse:
-        """Function to get all client accounts."""
+        """Method to get all client accounts."""
         if self.sandbox:
             sandbox_accounts = await self.servicies.sandbox.get_sandbox_accounts()
             if len(sandbox_accounts.accounts) == 0:
@@ -68,7 +68,7 @@ class AccountService(TinkoffClientService):
         return await self.servicies.users.get_accounts()
 
     async def get_portfolio(self, account_id: str) -> PortfolioResponse:
-        """Function to get account portfolio."""
+        """Method to get account portfolio."""
         if self.sandbox:
             return await self.servicies.sandbox.get_sandbox_portfolio(account_id=account_id)
         return await self.servicies.operations.get_portfolio(account_id=account_id)

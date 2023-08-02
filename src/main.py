@@ -8,15 +8,25 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.router import router as auth_router
+from src.config import settings
 from src.tk_api.router import router as tk_router
 from src.database import async_session_maker
 from src.models import Stock
+from src.tk_api.service.client import AccountService
 
 # from fastapi import Depends, FastAPI, Request, status
 # from fastapi.encoders import jsonable_encoder
 # from fastapi.responses import JSONResponse
 # from pydantic import ValidationError
 
+
+# Account
+if settings.sandbox:
+    TOKEN = settings.sandbox_invest_token
+    ACCOUNT_ID = '482ad8a0-55a2-4a3d-9487-26c7fa3b5296'
+else:
+    TOKEN = settings.invest_token
+    ACCOUNT_ID = '2168069710'
 
 app = FastAPI(title="TrackFolio")
 
@@ -36,11 +46,15 @@ async def get_db():
 
 
 @app.get("/")
-def home(request: Request):
+async def home(request: Request):
+    async with AccountService(TOKEN, settings.sandbox) as client:
+        portfoio = await client.get_portfolio(ACCOUNT_ID)
+        positions = portfoio.positions
     return templates.TemplateResponse(
         "home/dashboard.html",
         {
             "request": request,
+            "positions": positions
         },
     )
 

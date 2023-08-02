@@ -28,7 +28,7 @@ class OrdersService(TinkoffClientService):
                 direction=direction,
                 account_id=account_id,
                 order_type=order_type,
-                order_id=order_id
+                # order_id=order_id
             )
         # Commented while in development to avoid occasional real order post 
 
