@@ -1,20 +1,18 @@
-import re
 from fastapi import APIRouter
-from tinkoff.invest import InstrumentIdType
 
 from src.config import settings
-from src.tk_api.schemas import ClientAccounts, OrderRequest, SandboxTopupRequest
-from src.tk_api.service.client import AccountService, TinkoffClientService
+from src.tk_api.schemas import Account, ClientAccounts, OrderRequest, Portfolio, SandboxTopupRequest, TotalAmountPortfolio
+from src.tk_api.service.client import AccountService
 from src.tk_api.service.instruments import InstrumentsService
 from src.tk_api.service.orders import OrdersService
 
 # Account
 if settings.sandbox:
+    ACCOUNT_ID = settings.sandbox_account_id
     TOKEN = settings.sandbox_invest_token
-    ACCOUNT_ID = '482ad8a0-55a2-4a3d-9487-26c7fa3b5296'
 else:
+    ACCOUNT_ID = settings.account_id
     TOKEN = settings.invest_token
-    ACCOUNT_ID = '2168069710'
 
 # todo: delete
 print(TOKEN)
@@ -25,8 +23,19 @@ router = APIRouter()
 
 @router.get('/client')
 async def get_client() -> ClientAccounts:
+    accounts = ClientAccounts(accounts=[])
     async with AccountService(TOKEN, settings.sandbox) as client:
-        accounts = await client.get_accounts()
+        response = await client.get_accounts()
+    for account in response.accounts:
+        accounts.accounts.append(Account(
+            id=account.id,
+            type=account.type,
+            name=account.name,
+            status=account.status,
+            opened_date=account.opened_date,
+            closed_date=account.closed_date,
+            access_level=account.access_level
+        ))
     return ClientAccounts(
         accounts=accounts.accounts
     )
@@ -34,6 +43,11 @@ async def get_client() -> ClientAccounts:
 
 @router.get('/portfolio')
 async def get_portfolio():
+    portfolio = Portfolio(
+        positions=[],
+        total_amount_portfolio=TotalAmountPortfolio()
+        
+    )
     async with AccountService(TOKEN, settings.sandbox) as client:
         portfoio = await client.get_portfolio(ACCOUNT_ID)
     return portfoio

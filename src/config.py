@@ -17,9 +17,11 @@ class Settings(BaseSettings):
         default="sqlite+aiosqlite:///" + os.path.join(basedir, "app.db")
     )
     test_db_url: str = ""
+    account_id: str = ""
     invest_token: str = ""
-    sandbox: bool = True
+    sandbox_account_id: str = ""
     sandbox_invest_token: str = ""
+    sandbox: bool = True
 
     # redis_dsn: RedisDsn = Field(
     #     "redis://user:pass@localhost:6379/1",
