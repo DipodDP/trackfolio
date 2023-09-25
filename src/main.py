@@ -34,15 +34,15 @@ async def get_db():
         yield session
 
 
-@app.get("/")
-async def home(request: Request):
-    return templates.TemplateResponse(
-        "home/dashboard.html",
-        {
-            "request": request,
-            "positions": positions
-        },
-    )
+# @app.get("/")
+# async def home(request: Request):
+#     return templates.TemplateResponse(
+#         "home/dashboard.html",
+#         {
+#             "request": request,
+#             "positions": positions
+#         },
+#     )
 
 
 async def fetch_stock_data(id: int):

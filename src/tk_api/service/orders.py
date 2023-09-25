@@ -41,7 +41,7 @@ class OrdersService(TinkoffClientService):
         #     order_type=order_type,
         #     order_id=order_id
         # )
-    
+
     async def post_market_order(
         self,
         account_id: str,
@@ -68,4 +68,3 @@ class OrdersService(TinkoffClientService):
         )
         # logger.debug(f"order_id is {order_id}")
         return response
-
