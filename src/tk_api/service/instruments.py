@@ -65,13 +65,6 @@ class InstrumentsService(TinkoffClientService):
             return response
 
     async def get_instrument_by_figi(self, figi: str):
-        response = await self.servicies.instruments.share_by(
-                id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI,
-                id=figi
-        )
-        return response
-
-    async def get_asset(self, figi: str):
         response = await self.servicies.instruments.get_instrument_by(
             id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI,
             id=figi

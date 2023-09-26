@@ -2,7 +2,7 @@ from fastapi import APIRouter
 # from tinkoff.invest import InstrumentStatus
 
 from src.config import settings
-from src.tk_api.schemas import Account, ClientAccounts, FindInstrumentResponse, OrderRequest, Portfolio, SandboxTopupRequest
+from src.tk_api.schemas import Account, ClientAccounts, FindInstrumentResponse, InstrumentResponse, OrderRequest, Portfolio, SandboxPayInResponse, SandboxTopupRequest
 from src.tk_api.service.client import AccountService
 from src.tk_api.service.instruments import InstrumentsService
 from src.tk_api.service.orders import OrdersService
@@ -26,10 +26,10 @@ router = APIRouter()
 async def get_client() -> ClientAccounts:
     async with AccountService(TOKEN, settings.sandbox) as client:
         response = await client.get_accounts()
-    accounts = ClientAccounts(accounts=[])
+    accounts = []
 
     for account in response.accounts:
-        accounts.accounts.append(Account(
+        accounts.append(Account(
             id=account.id,
             type=account.type,
             name=account.name,
@@ -40,7 +40,7 @@ async def get_client() -> ClientAccounts:
         ))
 
     return ClientAccounts(
-        accounts=accounts.accounts
+        accounts=accounts
     )
 
 
@@ -58,19 +58,13 @@ async def get_portfolio() -> Portfolio:
 
 
 @router.get('/portfolio/{figi}')
-async def get_instrument(figi: str):
+async def get_instrument(figi: str) -> InstrumentResponse:
     async with InstrumentsService(TOKEN, settings.sandbox) as client:
-        instrument = await client.get_asset(figi)
+        response = await client.get_instrument_by_figi(figi)
 
-    return instrument
-
-
-@router.get('/ticker/{ticker}')
-async def get_instrument_by_ticker(ticker: str):
-    async with InstrumentsService(TOKEN, settings.sandbox) as client:
-        instrument = await client.get_instrument_by_ticker(ticker)
-
-    return instrument
+    return InstrumentResponse(
+        instrument=response.instrument
+    )
 
 
 @router.get('/find/{query}')
@@ -84,11 +78,13 @@ async def find_instrument(query: str) -> FindInstrumentResponse:
 
 
 @router.post('/sandbox')
-async def sandbox_topup(request: SandboxTopupRequest):
+async def sandbox_topup(request: SandboxTopupRequest) -> SandboxPayInResponse:
     async with AccountService(TOKEN, settings.sandbox) as client:
         response = await client.add_money_sandbox(ACCOUNT_ID, request.amount)
 
-    return response
+    return SandboxPayInResponse(
+        balance=response.balance
+    )
 
 
 @router.post('/portfolio')
@@ -102,6 +98,14 @@ async def post_market_order(request: OrderRequest):
         )
 
     return order
+
+
+# @router.get('/ticker/{ticker}')
+# async def get_instrument_by_ticker(ticker: str):
+#     async with InstrumentsService(TOKEN, settings.sandbox) as client:
+#         instrument = await client.get_instrument_by_ticker(ticker)
+#
+#     return instrument
 
 
 # @router.get('/portfolio/currencies')
