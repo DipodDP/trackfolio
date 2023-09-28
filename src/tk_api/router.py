@@ -2,7 +2,7 @@ from fastapi import APIRouter
 # from tinkoff.invest import InstrumentStatus
 
 from src.config import settings
-from src.tk_api.schemas import Account, ClientAccounts, FindInstrumentResponse, InstrumentResponse, OrderRequest, Portfolio, SandboxPayInResponse, SandboxTopupRequest
+from src.tk_api.schemas import ApiFindInstrumentResponse, ApiGetAccountsResponse, ApiInstrumentResponse, ApiPortfolioResponse, ApiPostOrderRequest, ApiSandboxPayInRequest, TrackfolioAccount, SandboxPayInResponse
 from src.tk_api.service.client import AccountService
 from src.tk_api.service.instruments import InstrumentsService
 from src.tk_api.service.orders import OrdersService
@@ -23,13 +23,13 @@ router = APIRouter()
 
 
 @router.get('/client')
-async def get_client() -> ClientAccounts:
+async def get_client() -> ApiGetAccountsResponse:
     async with AccountService(TOKEN, settings.sandbox) as client:
         response = await client.get_accounts()
     accounts = []
 
     for account in response.accounts:
-        accounts.append(Account(
+        accounts.append(TrackfolioAccount(
             id=account.id,
             type=account.type,
             name=account.name,
@@ -39,17 +39,17 @@ async def get_client() -> ClientAccounts:
             access_level=account.access_level
         ))
 
-    return ClientAccounts(
+    return ApiGetAccountsResponse(
         accounts=accounts
     )
 
 
 @router.get('/portfolio')
-async def get_portfolio() -> Portfolio:
+async def get_portfolio() -> ApiPortfolioResponse:
     async with AccountService(TOKEN, settings.sandbox) as client:
         response = await client.get_portfolio(ACCOUNT_ID)
 
-    return Portfolio(
+    return ApiPortfolioResponse(
         positions=response.positions,
         total_amount_portfolio=response.total_amount_portfolio,
         expected_yield=response.expected_yield,
@@ -58,27 +58,27 @@ async def get_portfolio() -> Portfolio:
 
 
 @router.get('/portfolio/{figi}')
-async def get_instrument(figi: str) -> InstrumentResponse:
+async def get_instrument(figi: str) -> ApiInstrumentResponse:
     async with InstrumentsService(TOKEN, settings.sandbox) as client:
         response = await client.get_instrument_by_figi(figi)
 
-    return InstrumentResponse(
+    return ApiInstrumentResponse(
         instrument=response.instrument
     )
 
 
 @router.get('/find/{query}')
-async def find_instrument(query: str) -> FindInstrumentResponse:
+async def find_instrument(query: str) -> ApiFindInstrumentResponse:
     async with InstrumentsService(TOKEN, settings.sandbox) as client:
         response = await client.instrument_find(query)
 
-    return FindInstrumentResponse(
+    return ApiFindInstrumentResponse(
         instruments=response.instruments
     )
 
 
 @router.post('/sandbox')
-async def sandbox_topup(request: SandboxTopupRequest) -> SandboxPayInResponse:
+async def sandbox_topup(request: ApiSandboxPayInRequest) -> SandboxPayInResponse:
     async with AccountService(TOKEN, settings.sandbox) as client:
         response = await client.add_money_sandbox(ACCOUNT_ID, request.amount)
 
@@ -88,7 +88,7 @@ async def sandbox_topup(request: SandboxTopupRequest) -> SandboxPayInResponse:
 
 
 @router.post('/portfolio')
-async def post_market_order(request: OrderRequest):
+async def post_market_order(request: ApiPostOrderRequest):
     async with OrdersService(TOKEN, settings.sandbox) as client:
         order = await client.post_market_order(
             figi=request.figi,
