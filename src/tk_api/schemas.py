@@ -51,18 +51,18 @@ class ShareSchema(BaseModel):
 
 
 # class Portfolio(BaseModel):
-#     # total_amount_shares: MoneyValue
-#     # total_amount_bonds: MoneyValue
-#     # total_amount_etf: MoneyValue
-#     # total_amount_currencies: MoneyValue
-#     # total_amount_futures: MoneyValue
+#     total_amount_shares: MoneyValue
+#     total_amount_bonds: MoneyValue
+#     total_amount_etf: MoneyValue
+#     total_amount_currencies: MoneyValue
+#     total_amount_futures: MoneyValue
 #     expected_yield: Quotation
 #     positions: List[PortfolioPosition]
 #     account_id: str
-#     # total_amount_options: MoneyValue
-#     # total_amount_sp: MoneyValue
+#     total_amount_options: MoneyValue
+#     total_amount_sp: MoneyValue
 #     total_amount_portfolio: MoneyValue
-#     # virtual_positions: List[VirtualPortfolioPosition]
+#     virtual_positions: List[VirtualPortfolioPosition]
 
 
 # class Instrument(BaseModel):  # pylint:disable=too-many-instance-attributes
@@ -261,7 +261,6 @@ class ApiFindInstrumentResponse(BaseModel):
 #     instrument_kind: "InstrumentType"
 #     first_1min_candle_date: datetime
 #     first_1day_candle_date: datetime
-#
 
 
 class ApiInstrumentResponse(BaseModel):

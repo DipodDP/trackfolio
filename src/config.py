@@ -1,5 +1,6 @@
 # global configs
 import os
+from typing import List
 
 from pydantic import Field
 # from typing import Any, Callable, Set
@@ -22,6 +23,7 @@ class Settings(BaseSettings):
     sandbox_account_id: str = ""
     sandbox_invest_token: str = ""
     sandbox: bool = True
+    allowed_origins: List[str] = []
 
     # redis_dsn: RedisDsn = Field(
     #     "redis://user:pass@localhost:6379/1",

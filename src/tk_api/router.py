@@ -67,13 +67,18 @@ async def get_instrument(figi: str) -> ApiInstrumentResponse:
     )
 
 
-@router.get('/find/{query}')
+@router.get('/find')
 async def find_instrument(query: str) -> ApiFindInstrumentResponse:
     async with InstrumentsService(TOKEN, settings.sandbox) as client:
         response = await client.instrument_find(query)
 
     return ApiFindInstrumentResponse(
-        instruments=response.instruments
+        instruments=[
+            # using List comprehensions to filter
+            # not allowed for trading results from tinkoff api
+            instrument for instrument in response.instruments
+            if instrument.api_trade_available_flag
+        ]
     )
 
 

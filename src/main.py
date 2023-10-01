@@ -3,10 +3,12 @@
 from sqlalchemy import select
 import uvicorn
 from fastapi import BackgroundTasks, Depends, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config import settings
 from src.auth.router import router as auth_router
 from src.tk_api.router import router as tk_router
 from src.database import async_session_maker
@@ -18,6 +20,21 @@ from src.models import Stock
 # from pydantic import ValidationError
 
 app = FastAPI(title="TrackFolio")
+
+# setting up CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PATCH", "PUT"],
+    allow_headers=[
+        "Content-Type",
+        "Set-Cookie",
+        "Access-Control-Allow-Headers",
+        "Access-Control-Allow-Origin",
+        "Authorization"
+    ],
+)
 
 app.include_router(auth_router)
 app.include_router(tk_router)
