@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 from pydantic import BaseModel
-from tinkoff.invest import AccessLevel, AccountStatus, AccountType, Instrument, InstrumentShort, InstrumentType, MoneyValue, OrderDirection, OrderExecutionReportStatus, OrderType, PortfolioPosition, Quotation, RealExchange, SecurityTradingStatus
+from tinkoff.invest import AccessLevel, AccountStatus, AccountType, Instrument, InstrumentShort, InstrumentType, MoneyValue, OrderDirection, OrderExecutionReportStatus, OrderType, PortfolioPosition, PortfolioRequest, Quotation, RealExchange, SecurityTradingStatus
 # from tinkoff.invest import OrderDirection, OrderType
 
 
@@ -171,6 +171,34 @@ class ApiGetAccountsResponse(BaseModel):
     accounts: List[TrackfolioAccount]
 
 
+class ApiPortfolioPosition(BaseModel):
+    # fields from tinkoff.invest class PorfolioPosition
+    figi: str
+    instrument_type: str
+    quantity: Quotation
+    average_position_price: MoneyValue
+    expected_yield: Quotation
+    # current_nkd: MoneyValue
+    # average_position_price_pt: Quotation
+    current_price: MoneyValue
+    # average_position_price_fifo: MoneyValue
+    # quantity_lots: Quotation
+    # blocked: bool
+    # blocked_lots: Quotation
+    # position_uid: str
+    # instrument_uid: str
+    # var_margin: MoneyValue
+    # expected_yield_fifo: Quotation
+
+    # added custom fields
+    ticker: str
+    title: str
+    total: MoneyValue
+    proportion: float
+    proportion_in_portfolio: float
+    profit: float
+
+
 class ApiPortfolioResponse(BaseModel):
     # total_amount_shares: MoneyValue
     # total_amount_bonds: MoneyValue
@@ -178,7 +206,7 @@ class ApiPortfolioResponse(BaseModel):
     # total_amount_currencies: MoneyValue
     # total_amount_futures: MoneyValue
     expected_yield: Quotation
-    positions: List[PortfolioPosition]
+    positions: List[ApiPortfolioPosition]
     account_id: str
     # total_amount_options: MoneyValue
     # total_amount_sp: MoneyValue

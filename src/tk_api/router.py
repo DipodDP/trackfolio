@@ -1,8 +1,9 @@
 from fastapi import APIRouter
+from pandas.tseries.offsets import Tick
 # from tinkoff.invest import InstrumentStatus
 
 from src.config import settings
-from src.tk_api.schemas import ApiFindInstrumentResponse, ApiGetAccountsResponse, ApiInstrumentResponse, ApiPortfolioResponse, ApiPostOrderRequest, ApiSandboxPayInRequest, TrackfolioAccount, SandboxPayInResponse
+from src.tk_api.schemas import ApiFindInstrumentResponse, ApiGetAccountsResponse, ApiInstrumentResponse, ApiPortfolioPosition, ApiPortfolioResponse, ApiPostOrderRequest, ApiSandboxPayInRequest, TrackfolioAccount, SandboxPayInResponse
 from src.tk_api.service.client import AccountService
 from src.tk_api.service.instruments import InstrumentsService
 from src.tk_api.service.orders import OrdersService
@@ -50,7 +51,17 @@ async def get_portfolio() -> ApiPortfolioResponse:
         response = await client.get_portfolio(ACCOUNT_ID)
 
     return ApiPortfolioResponse(
-        positions=response.positions,
+        positions=[
+            ApiPortfolioPosition(
+                ticker='TICK',
+                title='Title',
+                total=position.current_price,
+                proportion=5.3,
+                proportion_in_portfolio=5.3,
+                profit=61.2,
+                **vars(position)
+            ) for position in response.positions
+        ],
         total_amount_portfolio=response.total_amount_portfolio,
         expected_yield=response.expected_yield,
         account_id=response.account_id
@@ -75,7 +86,7 @@ async def find_instrument(query: str) -> ApiFindInstrumentResponse:
     return ApiFindInstrumentResponse(
         instruments=[
             # using List comprehensions to filter
-            # not allowed for trading results from tinkoff api
+            # results from tinkoff api that not allowed for trading
             instrument for instrument in response.instruments
             if instrument.api_trade_available_flag
         ]
