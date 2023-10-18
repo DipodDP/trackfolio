@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from pandas.tseries.offsets import Tick
+from tinkoff.invest import InstrumentIdType
 # from tinkoff.invest import InstrumentStatus
 
 from src.config import settings
@@ -49,19 +49,26 @@ async def get_client() -> ApiGetAccountsResponse:
 async def get_portfolio() -> ApiPortfolioResponse:
     async with AccountService(TOKEN, settings.sandbox) as client:
         response = await client.get_portfolio(ACCOUNT_ID)
+        positions = []
+        for position in response.positions:
+            instrument = (await client.servicies.instruments.get_instrument_by(
+                id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI,
+                id=position.figi
+            )).instrument
+            positions.append(
+                ApiPortfolioPosition(
+                    ticker=instrument.ticker,
+                    name=instrument.name,
+                    total=position.current_price,
+                    proportion=5.3,
+                    proportion_in_portfolio=5.3,
+                    profit=61.2,
+                    **vars(position)
+                )
+            )
 
     return ApiPortfolioResponse(
-        positions=[
-            ApiPortfolioPosition(
-                ticker='TICK',
-                title='Title',
-                total=position.current_price,
-                proportion=5.3,
-                proportion_in_portfolio=5.3,
-                profit=61.2,
-                **vars(position)
-            ) for position in response.positions
-        ],
+        positions=positions,
         total_amount_portfolio=response.total_amount_portfolio,
         expected_yield=response.expected_yield,
         account_id=response.account_id

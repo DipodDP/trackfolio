@@ -192,7 +192,7 @@ class ApiPortfolioPosition(BaseModel):
 
     # added custom fields
     ticker: str
-    title: str
+    name: str
     total: MoneyValue
     proportion: float
     proportion_in_portfolio: float
