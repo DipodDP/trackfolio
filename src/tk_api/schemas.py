@@ -1,7 +1,9 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import List
 from pydantic import BaseModel
 from tinkoff.invest import AccessLevel, AccountStatus, AccountType, Instrument, InstrumentShort, InstrumentType, MoneyValue, OrderDirection, OrderExecutionReportStatus, OrderType, PortfolioPosition, PortfolioRequest, Quotation, RealExchange, SecurityTradingStatus
+from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotation_to_decimal
 # from tinkoff.invest import OrderDirection, OrderType
 
 
@@ -14,6 +16,23 @@ class ShareSchema(BaseModel):
     sell_available_flag: bool = False
     api_trade_available_flag: bool = False
 
+
+class ExtQuotation(Quotation):
+
+    def __mul__(self, other: 'ExtQuotation | Quotation | ExtMoneyValue | MoneyValue') -> 'ExtQuotation':
+        prod = quotation_to_decimal(self) * quotation_to_decimal(other)\
+            if isinstance(other, ExtQuotation) else money_to_decimal(other)
+        quotation = decimal_to_quotation(prod)
+        return ExtQuotation(units=quotation.units, nano=quotation.nano)
+
+
+class ExtMoneyValue(MoneyValue):
+
+    def __mul__(self, other: 'ExtQuotation | Quotation | ExtMoneyValue | MoneyValue') -> 'ExtMoneyValue':
+        prod = money_to_decimal(self) * quotation_to_decimal(other)\
+            if isinstance(other, ExtQuotation) else money_to_decimal(other)
+        money = decimal_to_quotation(prod)
+        return ExtMoneyValue(units=money.units, nano=money.nano, currency=self.currency)
 
 # tinkoff api response schemas
 
@@ -194,9 +213,9 @@ class ApiPortfolioPosition(BaseModel):
     ticker: str
     name: str
     total: MoneyValue
-    proportion: float
-    proportion_in_portfolio: float
-    profit: float
+    proportion: Decimal
+    proportion_in_portfolio: Decimal
+    profit: Decimal
 
 
 class ApiPortfolioResponse(BaseModel):

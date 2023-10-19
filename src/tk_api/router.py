@@ -1,9 +1,12 @@
+from decimal import Decimal
+from operator import pos
 from fastapi import APIRouter
-from tinkoff.invest import InstrumentIdType
+from tinkoff.invest import InstrumentIdType, MoneyValue
+from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotation_to_decimal
 # from tinkoff.invest import InstrumentStatus
 
 from src.config import settings
-from src.tk_api.schemas import ApiFindInstrumentResponse, ApiGetAccountsResponse, ApiInstrumentResponse, ApiPortfolioPosition, ApiPortfolioResponse, ApiPostOrderRequest, ApiSandboxPayInRequest, TrackfolioAccount, SandboxPayInResponse
+from src.tk_api.schemas import ApiFindInstrumentResponse, ApiGetAccountsResponse, ApiInstrumentResponse, ApiPortfolioPosition, ApiPortfolioResponse, ApiPostOrderRequest, ApiSandboxPayInRequest, ExtMoneyValue, TrackfolioAccount, SandboxPayInResponse
 from src.tk_api.service.client import AccountService
 from src.tk_api.service.instruments import InstrumentsService
 from src.tk_api.service.orders import OrdersService
@@ -55,14 +58,24 @@ async def get_portfolio() -> ApiPortfolioResponse:
                 id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI,
                 id=position.figi
             )).instrument
+            total = decimal_to_quotation(
+                money_to_decimal(position.current_price)
+                * quotation_to_decimal(position.quantity)
+            )
+            proportion_in_portfolio = money_to_decimal(total)\
+                / money_to_decimal(response.total_amount_portfolio)
             positions.append(
                 ApiPortfolioPosition(
                     ticker=instrument.ticker,
                     name=instrument.name,
-                    total=position.current_price,
-                    proportion=5.3,
-                    proportion_in_portfolio=5.3,
-                    profit=61.2,
+                    total=MoneyValue(
+                        units=total.units,
+                        nano=total.nano,
+                        currency=position.current_price.currency
+                    ),
+                    proportion=Decimal(5.3),
+                    proportion_in_portfolio=proportion_in_portfolio,
+                    profit=Decimal(61.2),
                     **vars(position)
                 )
             )
