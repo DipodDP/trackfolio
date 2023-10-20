@@ -200,14 +200,14 @@ class ApiPortfolioPosition(BaseModel):
     # current_nkd: MoneyValue
     # average_position_price_pt: Quotation
     current_price: MoneyValue
-    # average_position_price_fifo: MoneyValue
+    average_position_price_fifo: MoneyValue
     # quantity_lots: Quotation
     # blocked: bool
     # blocked_lots: Quotation
     # position_uid: str
     # instrument_uid: str
     # var_margin: MoneyValue
-    # expected_yield_fifo: Quotation
+    expected_yield_fifo: Quotation
 
     # added custom fields
     ticker: str
@@ -215,7 +215,8 @@ class ApiPortfolioPosition(BaseModel):
     total: MoneyValue
     proportion: Decimal
     proportion_in_portfolio: Decimal
-    profit: Decimal
+    profit: Decimal | None
+    profit_fifo: Decimal | None
 
 
 class ApiPortfolioResponse(BaseModel):

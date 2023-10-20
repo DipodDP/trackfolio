@@ -1,9 +1,12 @@
 import asyncio
-from decimal import Decimal
+from decimal import Decimal, DivisionByZero, DivisionUndefined, InvalidOperation
+from typing import List
 
-from tinkoff.invest import AsyncClient, GetAccountsResponse, MoneyValue, PortfolioResponse
+from tinkoff.invest import AsyncClient, GetAccountsResponse, InstrumentIdType, MoneyValue, PortfolioResponse
 from tinkoff.invest.async_services import AsyncServices
-from tinkoff.invest.utils import decimal_to_quotation
+from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotation_to_decimal
+
+from src.tk_api.schemas import ApiPortfolioPosition
 
 
 class TinkoffClientService:
@@ -53,7 +56,7 @@ class AccountService(TinkoffClientService):
             return await self.servicies.sandbox.close_sandbox_account(account_id=account_id)
 
     async def get_accounts(self) -> GetAccountsResponse:
-        """Method to get all client accounts."""
+        """Method to get all client accounts (create sandbox account if there is none)."""
         if self.sandbox:
             sandbox_accounts = await self.servicies.sandbox.get_sandbox_accounts()
             if len(sandbox_accounts.accounts) == 0:
@@ -72,3 +75,53 @@ class AccountService(TinkoffClientService):
         if self.sandbox:
             return await self.servicies.sandbox.get_sandbox_portfolio(account_id=account_id)
         return await self.servicies.operations.get_portfolio(account_id=account_id)
+
+    async def get_positions_info(self, response: PortfolioResponse) -> List[ApiPortfolioPosition]:
+        """Method to get additional info for portfolio positions."""
+        format = Decimal('0.0000')
+        positions = []
+        for position in response.positions:
+
+            instrument = (await self.servicies.instruments.get_instrument_by(
+                id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI,
+                id=position.figi
+            )).instrument
+
+            total = decimal_to_quotation(
+                money_to_decimal(position.current_price)
+                * quotation_to_decimal(position.quantity)
+            )
+
+            proportion_in_portfolio = money_to_decimal(total)\
+                / money_to_decimal(response.total_amount_portfolio)
+            proportion_in_portfolio = proportion_in_portfolio.quantize(format)
+
+            try:
+                profit = money_to_decimal(position.current_price) / money_to_decimal(position.average_position_price) - 1
+                profit = profit.quantize(format)
+            except (DivisionByZero, InvalidOperation): 
+                profit = None
+
+            try:
+                profit_fifo = money_to_decimal(position.current_price) / money_to_decimal(position.average_position_price_fifo) - 1
+                profit_fifo = profit_fifo.quantize(format)
+            except (DivisionByZero, InvalidOperation): 
+                profit_fifo = None
+
+            positions.append(
+                ApiPortfolioPosition(
+                    ticker=instrument.ticker,
+                    name=instrument.name,
+                    total=MoneyValue(
+                        units=total.units,
+                        nano=total.nano,
+                        currency=position.current_price.currency
+                    ),
+                    proportion=Decimal(0.1234).quantize(format),
+                    proportion_in_portfolio=proportion_in_portfolio,
+                    profit=profit,
+                    profit_fifo=profit_fifo,
+                    **vars(position)
+                )
+            )
+        return positions

@@ -1,5 +1,4 @@
 from decimal import Decimal
-from operator import pos
 from fastapi import APIRouter
 from tinkoff.invest import InstrumentIdType, MoneyValue
 from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotation_to_decimal
@@ -52,33 +51,7 @@ async def get_client() -> ApiGetAccountsResponse:
 async def get_portfolio() -> ApiPortfolioResponse:
     async with AccountService(TOKEN, settings.sandbox) as client:
         response = await client.get_portfolio(ACCOUNT_ID)
-        positions = []
-        for position in response.positions:
-            instrument = (await client.servicies.instruments.get_instrument_by(
-                id_type=InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI,
-                id=position.figi
-            )).instrument
-            total = decimal_to_quotation(
-                money_to_decimal(position.current_price)
-                * quotation_to_decimal(position.quantity)
-            )
-            proportion_in_portfolio = money_to_decimal(total)\
-                / money_to_decimal(response.total_amount_portfolio)
-            positions.append(
-                ApiPortfolioPosition(
-                    ticker=instrument.ticker,
-                    name=instrument.name,
-                    total=MoneyValue(
-                        units=total.units,
-                        nano=total.nano,
-                        currency=position.current_price.currency
-                    ),
-                    proportion=Decimal(5.3),
-                    proportion_in_portfolio=proportion_in_portfolio,
-                    profit=Decimal(61.2),
-                    **vars(position)
-                )
-            )
+        positions = await client.get_positions_info(response)
 
     return ApiPortfolioResponse(
         positions=positions,
