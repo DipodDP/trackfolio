@@ -6,7 +6,7 @@ from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotati
 
 from src.config import settings
 from src.tk_api.schemas import ApiFindInstrumentResponse, ApiGetAccountsResponse, ApiInstrumentResponse, ApiPortfolioPosition, ApiPortfolioResponse, ApiPostOrderRequest, ApiSandboxPayInRequest, ExtMoneyValue, TrackfolioAccount, SandboxPayInResponse
-from src.tk_api.service.client import AccountService
+from src.tk_api.service.client import AccountService, PortfolioService
 from src.tk_api.service.instruments import InstrumentsService
 from src.tk_api.service.orders import OrdersService
 
@@ -49,15 +49,16 @@ async def get_client() -> ApiGetAccountsResponse:
 
 @router.get('/portfolio')
 async def get_portfolio() -> ApiPortfolioResponse:
-    async with AccountService(TOKEN, settings.sandbox) as client:
-        response = await client.get_portfolio(ACCOUNT_ID)
-        positions = await client.get_positions_info(response)
+    async with PortfolioService(TOKEN, settings.sandbox) as client:
+        await client.fetch_portfolio(ACCOUNT_ID)
+        positions = await client.get_positions_info()
+        await client.get_portfolio_proportions()
 
     return ApiPortfolioResponse(
         positions=positions,
-        total_amount_portfolio=response.total_amount_portfolio,
-        expected_yield=response.expected_yield,
-        account_id=response.account_id
+        total_amount_portfolio=client.portfolio.total_amount_portfolio,
+        expected_yield=client.portfolio.expected_yield,
+        account_id=client.portfolio.account_id
     )
 
 
