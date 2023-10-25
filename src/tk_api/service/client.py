@@ -6,7 +6,7 @@ from tinkoff.invest import AsyncClient, GetAccountsResponse, InstrumentIdType, I
 from tinkoff.invest.async_services import AsyncServices
 from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotation_to_decimal
 
-from src.tk_api.schemas import ApiPortfolioPosition, ProportionInPortfolio
+from src.tk_api.schemas import ApiPortfolioPosition, PlanPortfolioPosition, ProportionInPortfolio
 
 
 class TinkoffClientService:
@@ -174,3 +174,42 @@ class PortfolioService(TinkoffClientService):
         #     )
         attrs = vars(self.proportion_in_portfolio)
         print(attrs)
+
+    async def get_plan_positions_info(self) -> List[PlanPortfolioPosition]:
+        """Method to get plan positions info for portfolio positions."""
+        # format = Decimal('0.0000')
+        plan_positions = []
+        for position in self.portfolio_positions:
+            proportion_in_portfolio = Decimal(0.05)
+
+            try:
+                quantity = decimal_to_quotation(
+                    proportion_in_portfolio *
+                    money_to_decimal(self.portfolio.total_amount_portfolio) /
+                    money_to_decimal(position.current_price)
+                )
+            except (DivisionByZero, InvalidOperation):
+                quantity = decimal_to_quotation(Decimal(0))
+
+            total = decimal_to_quotation(
+                money_to_decimal(position.current_price)
+                * quotation_to_decimal(quantity)
+            )
+
+            plan_positions.append(
+                PlanPortfolioPosition(
+                    # ticker=position.ticker,
+                    # name=position.name,
+                    plan_quantity=quantity,
+                    plan_total=MoneyValue(
+                        units=total.units,
+                        nano=total.nano,
+                        currency=position.current_price.currency
+                    ),
+                    # proportion=Decimal(0.1234).quantize(format),
+                    # proportion_in_portfolio=position.proportion_in_portfolio,
+                    **vars(position)
+                )
+            )
+            self.portfolio_plan_positions = plan_positions
+        return plan_positions

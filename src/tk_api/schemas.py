@@ -245,6 +245,32 @@ class ApiPortfolioResponse(BaseModel):
     proportion_in_portfolio: ProportionInPortfolio
 
 
+class PlanPortfolioPosition(BaseModel):
+    figi: str
+    instrument_type: str
+    plan_quantity: Quotation
+    # current_nkd: MoneyValue
+    # average_position_price_pt: Quotation
+    # current_price: MoneyValue
+    # quantity_lots: Quotation
+    # blocked: bool
+    # blocked_lots: Quotation
+    # position_uid: str
+    # instrument_uid: str
+    # var_margin: MoneyValue
+
+    # added custom fields
+    ticker: str
+    name: str
+    plan_total: MoneyValue
+    # proportion: Decimal
+    proportion_in_portfolio: Decimal
+
+
+class PlanPortfolioResponse(ApiPortfolioResponse):
+    positions: List[PlanPortfolioPosition]
+
+
 class ApiSandboxPayInRequest(BaseModel):
     amount: str | int | float
 
