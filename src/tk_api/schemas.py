@@ -219,11 +219,19 @@ class ApiPortfolioPosition(BaseModel):
     profit_fifo: Decimal | None
 
 
+class ProportionInPortfolio(BaseModel):
+    bonds: Decimal
+    shares: Decimal
+    etf: Decimal
+    currencies: Decimal
+    unspecified: Decimal
+
+
 class ApiPortfolioResponse(BaseModel):
-    # total_amount_shares: MoneyValue
-    # total_amount_bonds: MoneyValue
-    # total_amount_etf: MoneyValue
-    # total_amount_currencies: MoneyValue
+    total_amount_shares: MoneyValue
+    total_amount_bonds: MoneyValue
+    total_amount_etf: MoneyValue
+    total_amount_currencies: MoneyValue
     # total_amount_futures: MoneyValue
     expected_yield: Quotation
     positions: List[ApiPortfolioPosition]
@@ -232,6 +240,9 @@ class ApiPortfolioResponse(BaseModel):
     # total_amount_sp: MoneyValue
     total_amount_portfolio: MoneyValue
     # virtual_positions: List[VirtualPortfolioPosition]
+    # total_amount_corp_bonds: MoneyValue
+    # total_amount_gov_bonds: MoneyValue
+    proportion_in_portfolio: ProportionInPortfolio
 
 
 class ApiSandboxPayInRequest(BaseModel):

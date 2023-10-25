@@ -1,14 +1,12 @@
 import asyncio
-from dataclasses import dataclass
 from decimal import Decimal, DivisionByZero, InvalidOperation
-from re import A
-from typing import Any, List
+from typing import List
 
 from tinkoff.invest import AsyncClient, GetAccountsResponse, InstrumentIdType, InstrumentType, MoneyValue, PortfolioResponse
 from tinkoff.invest.async_services import AsyncServices
 from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotation_to_decimal
 
-from src.tk_api.schemas import ApiPortfolioPosition
+from src.tk_api.schemas import ApiPortfolioPosition, ProportionInPortfolio
 
 
 class TinkoffClientService:
@@ -78,6 +76,13 @@ class PortfolioService(TinkoffClientService):
         super().__init__(token, sandbox)
         self.portfolio: PortfolioResponse
         self.portfolio_positions: List[ApiPortfolioPosition]
+        self.proportion_in_portfolio = ProportionInPortfolio(
+            shares=Decimal(0),
+            bonds=Decimal(0),
+            etf=Decimal(0),
+            currencies=Decimal(0),
+            unspecified=Decimal(0)
+        )
 
     async def fetch_portfolio(self, account_id: str) -> None:
         """Method to get account portfolio."""
@@ -142,20 +147,30 @@ class PortfolioService(TinkoffClientService):
     async def get_portfolio_proportions(self):
         format = Decimal('0.00')
 
-        for type in InstrumentType:
-            attr_name = str((type.name)).split('_')[-1].lower() + '_sum'
-            print(type.name)
+        for name in ['shares', 'bonds', 'etf', 'currencies']:
             setattr(
-                self,
-                attr_name,
-                Decimal(sum(
-                    map(
-                        lambda position: money_to_decimal(position.total)
-                        if position.instrument_type == type.name.split('_')[-1].lower()
-                        else 0,
-                        self.portfolio_positions
-                    )
-                )).quantize(format)
+                self.proportion_in_portfolio,
+                name,
+                (money_to_decimal(getattr(
+                    self.portfolio,
+                    'total_amount_' + name
+                )) / money_to_decimal(self.portfolio.total_amount_portfolio)).quantize(format)
             )
-            attrs = vars(self)
-            print(attrs)
+
+        # for type in InstrumentType:
+        #     attr_name = str((type.name)).split('_')[-1].lower() + '_sum'
+        #     print(type.name)
+        #     setattr(
+        #         self,
+        #         attr_name,
+        #         Decimal(sum(
+        #             map(
+        #                 lambda position: money_to_decimal(position.total)
+        #                 if position.instrument_type == type.name.split('_')[-1].lower()
+        #                 else 0,
+        #                 self.portfolio_positions
+        #             )
+        #         )).quantize(format)
+        #     )
+        attrs = vars(self.proportion_in_portfolio)
+        print(attrs)

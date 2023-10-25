@@ -1,11 +1,8 @@
-from decimal import Decimal
 from fastapi import APIRouter
-from tinkoff.invest import InstrumentIdType, MoneyValue
-from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotation_to_decimal
 # from tinkoff.invest import InstrumentStatus
 
 from src.config import settings
-from src.tk_api.schemas import ApiFindInstrumentResponse, ApiGetAccountsResponse, ApiInstrumentResponse, ApiPortfolioPosition, ApiPortfolioResponse, ApiPostOrderRequest, ApiSandboxPayInRequest, ExtMoneyValue, TrackfolioAccount, SandboxPayInResponse
+from src.tk_api.schemas import ApiFindInstrumentResponse, ApiGetAccountsResponse, ApiInstrumentResponse, ApiPortfolioResponse, ApiPostOrderRequest, ApiSandboxPayInRequest, TrackfolioAccount, SandboxPayInResponse
 from src.tk_api.service.client import AccountService, PortfolioService
 from src.tk_api.service.instruments import InstrumentsService
 from src.tk_api.service.orders import OrdersService
@@ -56,11 +53,25 @@ async def get_portfolio() -> ApiPortfolioResponse:
 
     return ApiPortfolioResponse(
         positions=positions,
+        total_amount_shares=client.portfolio.total_amount_shares,
+        total_amount_bonds=client.portfolio.total_amount_bonds,
+        total_amount_etf=client.portfolio.total_amount_etf,
+        total_amount_currencies=client.portfolio.total_amount_currencies,
         total_amount_portfolio=client.portfolio.total_amount_portfolio,
         expected_yield=client.portfolio.expected_yield,
-        account_id=client.portfolio.account_id
+        account_id=client.portfolio.account_id,
+        # total_amount_gov_bonds=
+        # total_amount_corp_bonds=
+        proportion_in_portfolio=client.proportion_in_portfolio
     )
 
+
+@router.get('/raw_portfolio')
+async def get_raw_portfolio():
+    async with PortfolioService(TOKEN, settings.sandbox) as client:
+        await client.fetch_portfolio(ACCOUNT_ID)
+
+    return client.portfolio
 
 @router.get('/portfolio/{figi}')
 async def get_instrument(figi: str) -> ApiInstrumentResponse:
