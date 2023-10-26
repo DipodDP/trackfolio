@@ -212,6 +212,7 @@ class ApiPortfolioPosition(BaseModel):
     # added custom fields
     ticker: str
     name: str
+    lot: int
     total: MoneyValue
     proportion: Decimal
     proportion_in_portfolio: Decimal
@@ -225,24 +226,6 @@ class ProportionInPortfolio(BaseModel):
     etf: Decimal
     currencies: Decimal
     unspecified: Decimal
-
-
-class ApiPortfolioResponse(BaseModel):
-    total_amount_shares: MoneyValue
-    total_amount_bonds: MoneyValue
-    total_amount_etf: MoneyValue
-    total_amount_currencies: MoneyValue
-    # total_amount_futures: MoneyValue
-    expected_yield: Quotation
-    positions: List[ApiPortfolioPosition]
-    account_id: str
-    # total_amount_options: MoneyValue
-    # total_amount_sp: MoneyValue
-    total_amount_portfolio: MoneyValue
-    # virtual_positions: List[VirtualPortfolioPosition]
-    # total_amount_corp_bonds: MoneyValue
-    # total_amount_gov_bonds: MoneyValue
-    proportion_in_portfolio: ProportionInPortfolio
 
 
 class PlanPortfolioPosition(BaseModel):
@@ -264,7 +247,26 @@ class PlanPortfolioPosition(BaseModel):
     name: str
     plan_total: MoneyValue
     # proportion: Decimal
-    proportion_in_portfolio: Decimal
+    plan_proportion_in_portfolio: Decimal
+
+
+class ApiPortfolioResponse(BaseModel):
+    total_amount_shares: MoneyValue
+    total_amount_bonds: MoneyValue
+    total_amount_etf: MoneyValue
+    total_amount_currencies: MoneyValue
+    # total_amount_futures: MoneyValue
+    expected_yield: Quotation
+    positions: List[ApiPortfolioPosition]
+    account_id: str
+    # total_amount_options: MoneyValue
+    # total_amount_sp: MoneyValue
+    total_amount_portfolio: MoneyValue
+    # virtual_positions: List[VirtualPortfolioPosition]
+    # total_amount_corp_bonds: MoneyValue
+    # total_amount_gov_bonds: MoneyValue
+    proportion_in_portfolio: ProportionInPortfolio
+    plan_positions: List[PlanPortfolioPosition]
 
 
 class PlanPortfolioResponse(ApiPortfolioResponse):

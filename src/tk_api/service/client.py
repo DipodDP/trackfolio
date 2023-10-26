@@ -1,12 +1,17 @@
 import asyncio
+import math
 from decimal import Decimal, DivisionByZero, InvalidOperation
 from typing import List
 
-from tinkoff.invest import AsyncClient, GetAccountsResponse, InstrumentIdType, InstrumentType, MoneyValue, PortfolioResponse
+from tinkoff.invest import AsyncClient, GetAccountsResponse, InstrumentIdType, InstrumentType, MoneyValue, PortfolioResponse, Quotation
 from tinkoff.invest.async_services import AsyncServices
 from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotation_to_decimal
 
 from src.tk_api.schemas import ApiPortfolioPosition, PlanPortfolioPosition, ProportionInPortfolio
+
+
+def round_up_to_lots(number: Decimal, lot: int) -> Quotation:
+    return decimal_to_quotation(math.ceil(number/lot)*Decimal(lot))
 
 
 class TinkoffClientService:
@@ -91,7 +96,11 @@ class PortfolioService(TinkoffClientService):
         else:
             self.portfolio = await self.servicies.operations.get_portfolio(account_id=account_id)
 
-    async def get_positions_info(self) -> List[ApiPortfolioPosition]:
+        await self._get_positions_info()
+        await self._get_portfolio_proportions()
+        await self._get_plan_positions_info()
+
+    async def _get_positions_info(self) -> None:
         """Method to get additional info for portfolio positions."""
         format = Decimal('0.0000')
         positions = []
@@ -129,6 +138,7 @@ class PortfolioService(TinkoffClientService):
                 ApiPortfolioPosition(
                     ticker=instrument.ticker,
                     name=instrument.name,
+                    lot=instrument.lot,
                     total=MoneyValue(
                         units=total.units,
                         nano=total.nano,
@@ -142,9 +152,8 @@ class PortfolioService(TinkoffClientService):
                 )
             )
             self.portfolio_positions = positions
-        return positions
 
-    async def get_portfolio_proportions(self):
+    async def _get_portfolio_proportions(self):
         format = Decimal('0.00')
 
         for name in ['shares', 'bonds', 'etf', 'currencies']:
@@ -175,18 +184,19 @@ class PortfolioService(TinkoffClientService):
         attrs = vars(self.proportion_in_portfolio)
         print(attrs)
 
-    async def get_plan_positions_info(self) -> List[PlanPortfolioPosition]:
+    async def _get_plan_positions_info(self) -> None:
         """Method to get plan positions info for portfolio positions."""
-        # format = Decimal('0.0000')
+        format = Decimal('0.0000')
         plan_positions = []
         for position in self.portfolio_positions:
-            proportion_in_portfolio = Decimal(0.05)
+            plan_proportion_in_portfolio = Decimal(0.05).quantize(format)
 
             try:
-                quantity = decimal_to_quotation(
-                    proportion_in_portfolio *
+                quantity = round_up_to_lots(
+                    plan_proportion_in_portfolio *
                     money_to_decimal(self.portfolio.total_amount_portfolio) /
-                    money_to_decimal(position.current_price)
+                    money_to_decimal(position.current_price),
+                    position.lot
                 )
             except (DivisionByZero, InvalidOperation):
                 quantity = decimal_to_quotation(Decimal(0))
@@ -207,9 +217,8 @@ class PortfolioService(TinkoffClientService):
                         currency=position.current_price.currency
                     ),
                     # proportion=Decimal(0.1234).quantize(format),
-                    # proportion_in_portfolio=position.proportion_in_portfolio,
+                    plan_proportion_in_portfolio=plan_proportion_in_portfolio,
                     **vars(position)
                 )
             )
             self.portfolio_plan_positions = plan_positions
-        return plan_positions
