@@ -269,10 +269,6 @@ class ApiPortfolioResponse(BaseModel):
     plan_positions: List[PlanPortfolioPosition]
 
 
-class PlanPortfolioResponse(ApiPortfolioResponse):
-    positions: List[PlanPortfolioPosition]
-
-
 class ApiSandboxPayInRequest(BaseModel):
     amount: str | int | float
 
@@ -356,3 +352,34 @@ class ApiInstrumentResponse(BaseModel):
 
 class ApiSandboxPayInResponse(BaseModel):
     balance: MoneyValue
+
+
+class LowRiskProportion(BaseModel):
+    gov_bonds_proportion: Decimal | None
+    corp_bonds_proportion: Decimal | None
+    gov_bonds_amount: MoneyValue
+    corp_bonds_amount: MoneyValue
+    total_amount: MoneyValue
+
+
+class HighRiskProportion(BaseModel):
+    etf_proportion: Decimal | None
+    shares_proportion: Decimal | None
+    etf_amount: MoneyValue
+    shares_amount: MoneyValue
+    total_amount: MoneyValue
+
+
+class PortfolioStructureResponse(BaseModel):
+    total_amount: MoneyValue
+    high_risk_part: HighRiskProportion
+    low_risk_part: LowRiskProportion
+
+
+class PortfolioPlanStructureResponse(BaseModel):
+    total_amount: MoneyValue
+    risk_profile: Decimal
+    max_risk_part_drawdown: Decimal
+    risk_proportion: Decimal
+    high_risk_part: HighRiskProportion
+    low_risk_part: LowRiskProportion
