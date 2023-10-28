@@ -359,7 +359,8 @@ class LowRiskProportion(BaseModel):
     corp_bonds_proportion: Decimal | None
     gov_bonds_amount: MoneyValue
     corp_bonds_amount: MoneyValue
-    total_amount: MoneyValue
+    low_risk_total_amount: MoneyValue
+    low_risk_total_proportion: Decimal | None
 
 
 class HighRiskProportion(BaseModel):
@@ -367,7 +368,8 @@ class HighRiskProportion(BaseModel):
     shares_proportion: Decimal | None
     etf_amount: MoneyValue
     shares_amount: MoneyValue
-    total_amount: MoneyValue
+    high_risk_total_amount: MoneyValue
+    high_risk_total_proportion: Decimal | None
 
 
 class PortfolioStructureResponse(BaseModel):
