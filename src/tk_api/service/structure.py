@@ -60,7 +60,7 @@ class PortfolioStructure():
             money_to_decimal(gov_bonds_amount),
             '+'
         )
-        assets_total_amount = money_decimal_operation(
+        total_amount_assets = money_decimal_operation(
             self.total_amount,
             money_to_decimal(client.portfolio.total_amount_currencies),
             '-'
@@ -69,7 +69,7 @@ class PortfolioStructure():
             low_risk_total_proportion = money_to_decimal(
                 money_decimal_operation(
                     low_risk_total_amount,
-                    money_to_decimal(assets_total_amount),
+                    money_to_decimal(total_amount_assets),
                     "/"
                 )
             ).quantize(format)
@@ -110,7 +110,7 @@ class PortfolioStructure():
             money_to_decimal(etf_amount),
             '+'
         )
-        assets_total_amount = money_decimal_operation(
+        total_amount_assets = money_decimal_operation(
             self.total_amount,
             money_to_decimal(client.portfolio.total_amount_currencies),
             '-'
@@ -119,7 +119,7 @@ class PortfolioStructure():
             high_risk_total_proportion = money_to_decimal(
                 money_decimal_operation(
                     high_risk_total_amount,
-                    money_to_decimal(assets_total_amount),
+                    money_to_decimal(total_amount_assets),
                     "/"
                 )
             ).quantize(format)
@@ -143,6 +143,12 @@ class PlanPortfolioStructure():
 
     def __init__(self, client: PortfolioService, risk_profile=Decimal('0.35'), max_risk_part_drawdown=Decimal('0.5')):
         self.total_amount = client.portfolio.total_amount_portfolio
+        self.total_amount_assets = money_decimal_operation(
+            self.total_amount,
+            money_to_decimal(client.portfolio.total_amount_currencies),
+            '-'
+        )
+
         self.risk_profile = risk_profile
         self.max_risk_part_drawdown = max_risk_part_drawdown
         self.risk_proportion = risk_profile/max_risk_part_drawdown
@@ -156,7 +162,7 @@ class PlanPortfolioStructure():
         """
         format = Decimal('0.0000')
         low_risk_total_amount = money_decimal_operation(
-            self.total_amount,
+            self.total_amount_assets,
             1-self.risk_proportion,
             '*'
         )
@@ -171,16 +177,11 @@ class PlanPortfolioStructure():
             gov_bonds_proportion,
             '*'
         )
-        assets_total_amount = money_decimal_operation(
-            self.total_amount,
-            money_to_decimal(client.portfolio.total_amount_currencies),
-            '-'
-        )
         try:
             low_risk_total_proportion = money_to_decimal(
                 money_decimal_operation(
                     low_risk_total_amount,
-                    money_to_decimal(assets_total_amount),
+                    money_to_decimal(self.total_amount_assets),
                     "/"
                 )
             ).quantize(format)
@@ -202,7 +203,7 @@ class PlanPortfolioStructure():
         """
         format = Decimal('0.0000')
         high_risk_total_amount = money_decimal_operation(
-            self.total_amount,
+            self.total_amount_assets,
             self.risk_proportion,
             '*'
         )
@@ -217,16 +218,11 @@ class PlanPortfolioStructure():
             shares_proportion,
             '*'
         )
-        assets_total_amount = money_decimal_operation(
-            self.total_amount,
-            money_to_decimal(client.portfolio.total_amount_currencies),
-            '-'
-        )
         try:
             high_risk_total_proportion = money_to_decimal(
                 money_decimal_operation(
                     high_risk_total_amount,
-                    money_to_decimal(assets_total_amount),
+                    money_to_decimal(self.total_amount_assets),
                     "/"
                 )
             ).quantize(format)
