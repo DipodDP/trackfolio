@@ -89,7 +89,6 @@ async def get_portfolio_structure() -> PortfolioStructureResponse:
     async with PortfolioService(TOKEN, settings.sandbox) as client:
         await client.fetch_portfolio(ACCOUNT_ID)
         structure = PortfolioStructure(client)
-    print(vars(structure))
 
     return PortfolioStructureResponse(**vars(structure))
 

@@ -3,7 +3,7 @@ import math
 from decimal import Decimal, DivisionByZero, InvalidOperation
 from typing import List
 
-from tinkoff.invest import AsyncClient, GetAccountsResponse, InstrumentIdType, InstrumentType, MoneyValue, PortfolioResponse, Quotation
+from tinkoff.invest import AsyncClient, GetAccountsResponse, InstrumentIdType, MoneyValue, PortfolioResponse, Quotation
 from tinkoff.invest.async_services import AsyncServices
 from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotation_to_decimal
 
@@ -80,7 +80,8 @@ class PortfolioService(TinkoffClientService):
     def __init__(self, token: str, sandbox: bool = True):
         super().__init__(token, sandbox)
         self.portfolio: PortfolioResponse
-        self.total_amount_assets: MoneyValue
+        self.total_amount: MoneyValue
+        self.total_additional_cash: MoneyValue
         self.portfolio_positions: List[ApiPortfolioPosition]
         self.proportion_in_portfolio = ProportionInPortfolio(
             shares=Decimal(0),
@@ -90,12 +91,22 @@ class PortfolioService(TinkoffClientService):
             unspecified=Decimal(0)
         )
 
-    async def fetch_portfolio(self, account_id: str) -> None:
+    async def fetch_portfolio(
+            self,
+            account_id: str,
+            total_additional_cash=MoneyValue(
+                units=0,
+                nano=0,
+                currency='rub'
+            )
+        ) -> None:
         """Method to get account portfolio."""
         if self.sandbox:
             self.portfolio = await self.servicies.sandbox.get_sandbox_portfolio(account_id=account_id)
         else:
             self.portfolio = await self.servicies.operations.get_portfolio(account_id=account_id)
+
+        self.total_additional_cash = total_additional_cash
 
         await self._get_positions_info()
         await self._get_portfolio_proportions()
@@ -106,12 +117,12 @@ class PortfolioService(TinkoffClientService):
         format = Decimal('0.0000')
         positions = []
 
-        self.total_amount_assets = MoneyValue(
+        self.total_amount = MoneyValue(
             currency='rub',
             **vars(
                 decimal_to_quotation(
-                    money_to_decimal(self.portfolio.total_amount_portfolio) -
-                    money_to_decimal(self.portfolio.total_amount_currencies)
+                    money_to_decimal(self.portfolio.total_amount_portfolio) +
+                    money_to_decimal(self.total_additional_cash)
                 ),
             )
         )
@@ -129,7 +140,7 @@ class PortfolioService(TinkoffClientService):
             )
 
             proportion_in_portfolio = money_to_decimal(total)\
-                / money_to_decimal(self.total_amount_assets)
+                / money_to_decimal(self.total_amount)
             proportion_in_portfolio = proportion_in_portfolio.quantize(format)
 
             try:
@@ -168,26 +179,15 @@ class PortfolioService(TinkoffClientService):
     async def _get_portfolio_proportions(self):
         format = Decimal('0.00')
 
-        for name in ['shares', 'bonds', 'etf']:
+        for name in ['shares', 'bonds', 'etf', 'currencies']:
             setattr(
                 self.proportion_in_portfolio,
                 name,
                 (money_to_decimal(getattr(
                     self.portfolio,
                     'total_amount_' + name
-                )) / money_to_decimal(self.total_amount_assets)).quantize(format)
+                )) / money_to_decimal(self.total_amount)).quantize(format)
             )
-        setattr(
-            self.proportion_in_portfolio,
-            'currencies',
-            (money_to_decimal(getattr(
-                self.portfolio,
-                'total_amount_currencies'
-            )) / money_to_decimal(self.portfolio.total_amount_portfolio)).quantize(format)
-        )
-
-        attrs = vars(self.proportion_in_portfolio)
-        print(attrs)
 
     async def _get_plan_positions_info(self) -> None:
         """Method to get plan positions info for portfolio positions."""
@@ -199,7 +199,7 @@ class PortfolioService(TinkoffClientService):
             try:
                 quantity = round_up_to_lots(
                     plan_proportion_in_portfolio *
-                    money_to_decimal(self.total_amount_assets) /
+                    money_to_decimal(self.total_amount) /
                     money_to_decimal(position.current_price),
                     position.lot
                 )
@@ -213,15 +213,12 @@ class PortfolioService(TinkoffClientService):
 
             plan_positions.append(
                 PlanPortfolioPosition(
-                    # ticker=position.ticker,
-                    # name=position.name,
                     plan_quantity=quantity,
                     plan_total=MoneyValue(
                         units=total.units,
                         nano=total.nano,
                         currency=position.current_price.currency
                     ),
-                    # proportion=Decimal(0.1234).quantize(format),
                     plan_proportion_in_portfolio=plan_proportion_in_portfolio,
                     **vars(position)
                 )

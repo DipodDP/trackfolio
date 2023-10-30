@@ -153,10 +153,10 @@ class PlanPortfolioStructure():
         self.max_risk_part_drawdown = max_risk_part_drawdown
         self.risk_proportion = risk_profile/max_risk_part_drawdown
 
-        self.high_risk_part = self._get_high_risk_proportion(client)
-        self.low_risk_part = self._get_low_risk_proportion(client)
+        self.high_risk_part = self._get_high_risk_proportion()
+        self.low_risk_part = self._get_low_risk_proportion()
 
-    def _get_low_risk_proportion(self, client: PortfolioService, corp_bonds_proportion=Decimal('0.4')):
+    def _get_low_risk_proportion(self, corp_bonds_proportion=Decimal('0.4')):
         """
         Method to get plan structure of the low risk portfolio part
         """
@@ -197,7 +197,7 @@ class PlanPortfolioStructure():
             low_risk_total_proportion=low_risk_total_proportion
         )
 
-    def _get_high_risk_proportion(self, client: PortfolioService, shares_proportion=Decimal('0.8')):
+    def _get_high_risk_proportion(self, shares_proportion=Decimal('0.8')):
         """
         Method to get plan structure of the high risk portfolio part
         """
