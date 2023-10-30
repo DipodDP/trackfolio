@@ -248,6 +248,7 @@ class PlanPortfolioPosition(BaseModel):
     plan_total: MoneyValue
     # proportion: Decimal
     plan_proportion_in_portfolio: Decimal
+    to_buy_lots: Quotation
 
 
 class ApiPortfolioResponse(BaseModel):

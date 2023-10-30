@@ -206,6 +206,13 @@ class PortfolioService(TinkoffClientService):
             except (DivisionByZero, InvalidOperation):
                 quantity = decimal_to_quotation(Decimal(0))
 
+            try:
+                to_buy_lots = decimal_to_quotation(
+                money_to_decimal(quantity) / position.lot
+                )
+            except (DivisionByZero, InvalidOperation):
+                to_buy_lots = decimal_to_quotation(Decimal(0))
+
             total = decimal_to_quotation(
                 money_to_decimal(position.current_price)
                 * quotation_to_decimal(quantity)
@@ -220,7 +227,8 @@ class PortfolioService(TinkoffClientService):
                         currency=position.current_price.currency
                     ),
                     plan_proportion_in_portfolio=plan_proportion_in_portfolio,
-                    **vars(position)
+                    **vars(position),
+                    to_buy_lots=to_buy_lots
                 )
             )
             self.portfolio_plan_positions = plan_positions
