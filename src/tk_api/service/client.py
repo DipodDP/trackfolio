@@ -207,8 +207,14 @@ class PortfolioService(TinkoffClientService):
                 quantity = decimal_to_quotation(Decimal(0))
 
             try:
-                to_buy_lots = decimal_to_quotation(
-                money_to_decimal(quantity) / position.lot
+                current_quantity = next(
+                    cur_pos.quantity for cur_pos in self.portfolio_positions if cur_pos.figi == position.figi
+                )
+                to_buy_lots = round_up_to_lots(
+                        quotation_to_decimal(quantity) -
+                        quotation_to_decimal(current_quantity)
+                        / position.lot,
+                    position.lot
                 )
             except (DivisionByZero, InvalidOperation):
                 to_buy_lots = decimal_to_quotation(Decimal(0))
