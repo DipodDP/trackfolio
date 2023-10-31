@@ -225,7 +225,9 @@ class ProportionInPortfolio(BaseModel):
     shares: Decimal
     etf: Decimal
     currencies: Decimal
-    unspecified: Decimal
+    futures: Decimal
+    options: Decimal
+    sp: Decimal
 
 
 class PlanPortfolioPosition(BaseModel):

@@ -88,8 +88,20 @@ class PortfolioService(TinkoffClientService):
             bonds=Decimal(0),
             etf=Decimal(0),
             currencies=Decimal(0),
-            unspecified=Decimal(0)
+            futures=Decimal(0),
+            options=Decimal(0),
+            sp=Decimal(0)
         )
+        self.multiple_forms = {
+            'share': 'shares',
+            'bond': 'bonds',
+            'currency': 'currencies',
+            'etf': 'etf',
+            'future': 'futures',
+            'option': 'options',
+            'unspecified': 'sp'
+        }
+
 
     async def fetch_portfolio(
             self,
@@ -108,14 +120,12 @@ class PortfolioService(TinkoffClientService):
 
         self.total_additional_cash = total_additional_cash
 
-        await self._get_positions_info()
         await self._get_portfolio_proportions()
+        await self._get_positions_info()
         await self._get_plan_positions_info()
 
-    async def _get_positions_info(self) -> None:
-        """Method to get additional info for portfolio positions."""
-        format = Decimal('0.0000')
-        positions = []
+    async def _get_portfolio_proportions(self):
+        format = Decimal(0.00)
 
         self.total_amount = MoneyValue(
             currency='rub',
@@ -126,6 +136,22 @@ class PortfolioService(TinkoffClientService):
                 ),
             )
         )
+
+        for name in self.multiple_forms.values():
+            setattr(
+                self.proportion_in_portfolio,
+                name,
+                (money_to_decimal(getattr(
+                    self.portfolio,
+                    'total_amount_' + name
+                )) / money_to_decimal(self.total_amount)).quantize(format)
+            )
+
+    async def _get_positions_info(self) -> None:
+        """Method to get additional info for portfolio positions."""
+        format = Decimal(0.0000)
+
+        positions = []
 
         for position in self.portfolio.positions:
 
@@ -138,6 +164,14 @@ class PortfolioService(TinkoffClientService):
                 money_to_decimal(position.current_price)
                 * quotation_to_decimal(position.quantity)
             )
+
+            proportion = money_to_decimal(total) / money_to_decimal(
+                getattr(
+                    self.portfolio,
+                    'total_amount_' + self.multiple_forms[position.instrument_type]
+                )
+            )
+            proportion = proportion.quantize(format)
 
             proportion_in_portfolio = money_to_decimal(total)\
                 / money_to_decimal(self.total_amount)
@@ -167,7 +201,7 @@ class PortfolioService(TinkoffClientService):
                         nano=total.nano,
                         currency=position.current_price.currency
                     ),
-                    proportion=Decimal(0.1234).quantize(format),
+                    proportion=proportion,
                     proportion_in_portfolio=proportion_in_portfolio,
                     profit=profit,
                     profit_fifo=profit_fifo,
@@ -175,19 +209,6 @@ class PortfolioService(TinkoffClientService):
                 )
             )
             self.portfolio_positions = positions
-
-    async def _get_portfolio_proportions(self):
-        format = Decimal('0.00')
-
-        for name in ['shares', 'bonds', 'etf', 'currencies']:
-            setattr(
-                self.proportion_in_portfolio,
-                name,
-                (money_to_decimal(getattr(
-                    self.portfolio,
-                    'total_amount_' + name
-                )) / money_to_decimal(self.total_amount)).quantize(format)
-            )
 
     async def _get_plan_positions_info(self) -> None:
         """Method to get plan positions info for portfolio positions."""
