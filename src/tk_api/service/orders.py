@@ -1,4 +1,3 @@
-
 from tinkoff.invest import OrderDirection, OrderType, PostOrderResponse, Quotation
 from src.tk_api.service.client import TinkoffClientService
 
@@ -18,7 +17,7 @@ class OrdersService(TinkoffClientService):
         price: Quotation | None,
         direction: OrderDirection,
         order_type: OrderType,
-        order_id: str
+        # order_id: str
     ) -> PostOrderResponse:
         if self.sandbox:
             return await self.servicies.sandbox.post_sandbox_order(
@@ -63,7 +62,6 @@ class OrdersService(TinkoffClientService):
             price=None,
             direction=OrderDirection.ORDER_DIRECTION_BUY if is_buy else OrderDirection.ORDER_DIRECTION_SELL,
             order_type=OrderType.ORDER_TYPE_MARKET,
-            order_id='test_id_1'
             # order_id=generate_order_id()
         )
         # logger.debug(f"order_id is {order_id}")

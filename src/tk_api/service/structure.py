@@ -4,7 +4,7 @@ from typing import Literal
 from tinkoff.invest import MoneyValue
 from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal
 
-from src.tk_api.schemas import HighRiskProportion, LowRiskProportion
+from src.tk_api.schemas import HighRiskPart, LowRiskPart, PortfolioRiskParts
 from src.tk_api.service.client import PortfolioService
 
 
@@ -25,17 +25,45 @@ def money_decimal_operation(money: MoneyValue, decimal: Decimal, op: Literal['+'
     )
 
 
-class PortfolioStructure():
+class PortfolioStructure:
     """
     Structure of the portfolio
     """
 
-    def __init__(self, client: PortfolioService):
+    def __init__(
+            self,
+            client: PortfolioService,
+            risk_profile=Decimal('0.35'),
+            max_risk_part_drawdown=Decimal('0.5'),
+            corp_bonds_proportion=Decimal('0.4'),
+            shares_proportion=Decimal('0.8')
+        ):
         self.total_amount = client.portfolio.total_amount_portfolio
-        self.high_risk_part = self._get_high_risk_proportion(client)
-        self.low_risk_part = self._get_low_risk_proportion(client)
+        self.total_amount_assets = money_decimal_operation(
+            self.total_amount,
+            money_to_decimal(client.portfolio.total_amount_currencies),
+            '-'
+        )
 
-    def _get_low_risk_proportion(self, client: PortfolioService):
+        self.risk_profile = risk_profile
+        self.max_risk_part_drawdown = max_risk_part_drawdown
+        self.risk_proportion = risk_profile/max_risk_part_drawdown
+        self.corp_bonds_proportion = corp_bonds_proportion
+        self.shares_proportion = shares_proportion
+        # try to use DI here, but maybe it's a little dumb implementation here:)
+        self.current_structure = PortfolioRiskParts()
+        self.current_structure.calculate_current_structure(
+            self._get_current_low_risk_part,
+            self._get_current_high_risk_part,
+            client
+        )
+        self.plan_structure = PortfolioRiskParts()
+        self.plan_structure.calculate_plan_structure(
+            self._get_plan_low_risk_part,
+            self._get_plan_high_risk_part,
+        )
+
+    def _get_current_low_risk_part(self, client: PortfolioService) -> LowRiskPart:
         """
         Method to get structure of the low risk portfolio part
         """
@@ -75,7 +103,7 @@ class PortfolioStructure():
             ).quantize(format)
         except (DivisionByZero, InvalidOperation):
             low_risk_total_proportion = None
-        return LowRiskProportion(
+        return LowRiskPart(
             gov_bonds_proportion=gov_bonds_proportion,
             corp_bonds_proportion=corp_bonds_proportion,
             gov_bonds_amount=gov_bonds_amount,
@@ -84,7 +112,7 @@ class PortfolioStructure():
             low_risk_total_proportion=low_risk_total_proportion
         )
 
-    def _get_high_risk_proportion(self, client: PortfolioService):
+    def _get_current_high_risk_part(self, client: PortfolioService) -> HighRiskPart:
         """
         Method to get structure of the high risk portfolio part
         """
@@ -126,37 +154,16 @@ class PortfolioStructure():
         except (DivisionByZero, InvalidOperation):
             high_risk_total_proportion = None
 
-        return HighRiskProportion(
-            shares_proportion=shares_proportion,
+        return HighRiskPart(
             etf_proportion=etf_proportion,
-            shares_amount=shares_amount,
+            shares_proportion=shares_proportion,
             etf_amount=etf_amount,
+            shares_amount=shares_amount,
             high_risk_total_amount=high_risk_total_amount,
             high_risk_total_proportion=high_risk_total_proportion
         )
 
-
-class PlanPortfolioStructure():
-    """
-    Plan structure of the portfolio
-    """
-
-    def __init__(self, client: PortfolioService, risk_profile=Decimal('0.35'), max_risk_part_drawdown=Decimal('0.5')):
-        self.total_amount = client.portfolio.total_amount_portfolio
-        self.total_amount_assets = money_decimal_operation(
-            self.total_amount,
-            money_to_decimal(client.portfolio.total_amount_currencies),
-            '-'
-        )
-
-        self.risk_profile = risk_profile
-        self.max_risk_part_drawdown = max_risk_part_drawdown
-        self.risk_proportion = risk_profile/max_risk_part_drawdown
-
-        self.high_risk_part = self._get_high_risk_proportion()
-        self.low_risk_part = self._get_low_risk_proportion()
-
-    def _get_low_risk_proportion(self, corp_bonds_proportion=Decimal('0.4')):
+    def _get_plan_low_risk_part(self) -> LowRiskPart:
         """
         Method to get plan structure of the low risk portfolio part
         """
@@ -166,10 +173,10 @@ class PlanPortfolioStructure():
             1-self.risk_proportion,
             '*'
         )
-        gov_bonds_proportion = 1 - corp_bonds_proportion
+        gov_bonds_proportion = 1 - self.corp_bonds_proportion
         corp_bonds_amount = money_decimal_operation(
             low_risk_total_amount,
-            corp_bonds_proportion,
+            self.corp_bonds_proportion,
             '*'
         )
         gov_bonds_amount = money_decimal_operation(
@@ -188,16 +195,16 @@ class PlanPortfolioStructure():
         except (DivisionByZero, InvalidOperation):
             low_risk_total_proportion = None
 
-        return LowRiskProportion(
+        return LowRiskPart(
             gov_bonds_proportion=gov_bonds_proportion,
-            corp_bonds_proportion=corp_bonds_proportion,
+            corp_bonds_proportion=self.corp_bonds_proportion,
             gov_bonds_amount=gov_bonds_amount,
             corp_bonds_amount=corp_bonds_amount,
             low_risk_total_amount=low_risk_total_amount,
             low_risk_total_proportion=low_risk_total_proportion
         )
 
-    def _get_high_risk_proportion(self, shares_proportion=Decimal('0.8')):
+    def _get_plan_high_risk_part(self) -> HighRiskPart:
         """
         Method to get plan structure of the high risk portfolio part
         """
@@ -207,7 +214,7 @@ class PlanPortfolioStructure():
             self.risk_proportion,
             '*'
         )
-        etf_proportion = 1 - shares_proportion
+        etf_proportion = 1 - self.shares_proportion
         etf_amount = money_decimal_operation(
             high_risk_total_amount,
             etf_proportion,
@@ -215,7 +222,7 @@ class PlanPortfolioStructure():
         )
         shares_amount = money_decimal_operation(
             high_risk_total_amount,
-            shares_proportion,
+            self.shares_proportion,
             '*'
         )
         try:
@@ -229,9 +236,9 @@ class PlanPortfolioStructure():
         except (DivisionByZero, InvalidOperation):
             high_risk_total_proportion = None
 
-        return HighRiskProportion(
+        return HighRiskPart(
             etf_proportion=etf_proportion,
-            shares_proportion=shares_proportion,
+            shares_proportion=self.shares_proportion,
             etf_amount=etf_amount,
             shares_amount=shares_amount,
             high_risk_total_amount=high_risk_total_amount,

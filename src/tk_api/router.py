@@ -2,11 +2,11 @@ from fastapi import APIRouter
 # from tinkoff.invest import InstrumentStatus
 
 from src.config import settings
-from src.tk_api.schemas import ApiFindInstrumentResponse, ApiGetAccountsResponse, ApiInstrumentResponse, ApiPortfolioResponse, ApiPostOrderRequest, ApiSandboxPayInRequest, PortfolioPlanStructureResponse, PortfolioStructureResponse, TrackfolioAccount, SandboxPayInResponse
+from src.tk_api.schemas import ApiFindInstrumentResponse, ApiGetAccountsResponse, ApiInstrumentResponse, ApiPortfolioResponse, ApiPostOrderRequest, ApiSandboxPayInRequest, PortfolioStructureResponse, TrackfolioAccount, SandboxPayInResponse
 from src.tk_api.service.client import AccountService, PortfolioService
 from src.tk_api.service.instruments import InstrumentsService
 from src.tk_api.service.orders import OrdersService
-from src.tk_api.service.structure import PlanPortfolioStructure, PortfolioStructure
+from src.tk_api.service.structure import PortfolioStructure
 
 # Account
 if settings.sandbox:
@@ -89,17 +89,8 @@ async def get_portfolio_structure() -> PortfolioStructureResponse:
     async with PortfolioService(TOKEN, settings.sandbox) as client:
         await client.fetch_portfolio(ACCOUNT_ID)
         structure = PortfolioStructure(client)
-
+    print(vars(structure))
     return PortfolioStructureResponse(**vars(structure))
-
-
-@router.get('/plan_structure')
-async def get_portfolio_plan_structure() -> PortfolioPlanStructureResponse:
-    async with PortfolioService(TOKEN, settings.sandbox) as client:
-        await client.fetch_portfolio(ACCOUNT_ID)
-        plan_structure = PlanPortfolioStructure(client)
-
-    return PortfolioPlanStructureResponse(**vars(plan_structure))
 
 
 @router.get('/find')

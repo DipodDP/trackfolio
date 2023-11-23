@@ -125,7 +125,7 @@ class PortfolioService(TinkoffClientService):
         await self._get_plan_positions_info()
 
     async def _get_portfolio_proportions(self):
-        format = Decimal(0.00)
+        format = Decimal('0.00')
 
         self.total_amount = MoneyValue(
             currency='rub',
@@ -149,7 +149,7 @@ class PortfolioService(TinkoffClientService):
 
     async def _get_positions_info(self) -> None:
         """Method to get additional info for portfolio positions."""
-        format = Decimal(0.0000)
+        format = Decimal('0.0000')
 
         positions = []
 

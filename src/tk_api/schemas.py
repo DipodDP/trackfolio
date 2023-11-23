@@ -1,9 +1,12 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import List
+from typing import List, Any, Callable
 from pydantic import BaseModel
 from tinkoff.invest import AccessLevel, AccountStatus, AccountType, Instrument, InstrumentShort, InstrumentType, MoneyValue, OrderDirection, OrderExecutionReportStatus, OrderType, PortfolioPosition, PortfolioRequest, Quotation, RealExchange, SecurityTradingStatus
 from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotation_to_decimal
+
+# from src.tk_api.service.client import PortfolioService
+
 # from tinkoff.invest import OrderDirection, OrderType
 
 
@@ -277,7 +280,7 @@ class ApiSandboxPayInRequest(BaseModel):
 
 
 class ApiPostOrderRequest(BaseModel):
-    account_id: str
+    # account_id: str
     figi: str
     count_lots: int
     # price: Quotation | None
@@ -357,7 +360,7 @@ class ApiSandboxPayInResponse(BaseModel):
     balance: MoneyValue
 
 
-class LowRiskProportion(BaseModel):
+class LowRiskPart(BaseModel):
     gov_bonds_proportion: Decimal | None
     corp_bonds_proportion: Decimal | None
     gov_bonds_amount: MoneyValue
@@ -366,7 +369,7 @@ class LowRiskProportion(BaseModel):
     low_risk_total_proportion: Decimal | None
 
 
-class HighRiskProportion(BaseModel):
+class HighRiskPart(BaseModel):
     etf_proportion: Decimal | None
     shares_proportion: Decimal | None
     etf_amount: MoneyValue
@@ -375,16 +378,36 @@ class HighRiskProportion(BaseModel):
     high_risk_total_proportion: Decimal | None
 
 
+class PortfolioRiskParts(BaseModel):
+    high_risk_part: HighRiskPart | None = None
+    low_risk_part: LowRiskPart | None = None
+
+    def calculate_current_structure(
+            self,
+            calculate_low: Callable[..., Any],
+            calculate_high: Callable[..., Any],
+            client: Any
+        ):
+        # calculation for current_structure
+        self.low_risk_part = calculate_low(client)
+        self.high_risk_part = calculate_high(client)
+
+    def calculate_plan_structure(
+            self,
+            calculate_low: Callable[..., Any],
+            calculate_high: Callable[..., Any]
+        ):
+        # calculation for plan_structure
+        self.low_risk_part = calculate_low()
+        self.high_risk_part = calculate_high()
+
+
 class PortfolioStructureResponse(BaseModel):
-    total_amount: MoneyValue
-    high_risk_part: HighRiskProportion
-    low_risk_part: LowRiskProportion
-
-
-class PortfolioPlanStructureResponse(BaseModel):
     total_amount: MoneyValue
     risk_profile: Decimal
     max_risk_part_drawdown: Decimal
     risk_proportion: Decimal
-    high_risk_part: HighRiskProportion
-    low_risk_part: LowRiskProportion
+    corp_bonds_proportion: Decimal
+    shares_proportion: Decimal
+    current_structure: PortfolioRiskParts
+    plan_structure: PortfolioRiskParts
