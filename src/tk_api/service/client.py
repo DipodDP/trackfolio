@@ -245,6 +245,44 @@ class PortfolioService(TinkoffClientService):
                 * quotation_to_decimal(quantity)
             )
 
+            target_profit = 1 + Decimal(0.65).quantize(format)
+            exit_drawdown = Decimal(0.5).quantize(format)
+
+            exit_profit_price = decimal_to_quotation(
+                money_to_decimal(position.current_price)
+                * target_profit
+            )
+
+            exit_loss_price = decimal_to_quotation(
+                money_to_decimal(position.current_price)
+                * exit_drawdown
+            )
+
+            try:
+                if (current := money_to_decimal(position.current_price)) <\
+                    money_to_decimal(position.average_position_price):
+                    target_progress = money_to_decimal(exit_loss_price) /\
+                        current * -1
+                    print('Loss progress', target_progress, position.ticker)
+                else:
+                    target_progress = current /\
+                        money_to_decimal(exit_profit_price)
+                    print('Profit progress', target_progress, position.ticker)
+
+                # todo: refactor
+                # normalize with function new_value = (old_value - old_min) /
+                # (old_max - old_min) * (new_max - new_min) + new_min
+                target_progress = Decimal(
+                    (float(target_progress) - (1/float(target_profit))) /\
+                        (1 - (1/float(target_profit))) if target_progress > 0 \
+                    else (float(target_progress) + 1) /\
+                        (-(1/float(exit_drawdown)) - 1)
+                ).quantize(format)
+                print('Target progress', target_progress, position.ticker)
+
+            except (DivisionByZero, InvalidOperation):
+                target_progress = None
+
             plan_positions.append(
                 PlanPortfolioPosition(
                     plan_quantity=quantity,
@@ -254,8 +292,21 @@ class PortfolioService(TinkoffClientService):
                         currency=position.current_price.currency
                     ),
                     plan_proportion_in_portfolio=plan_proportion_in_portfolio,
-                    **vars(position),
-                    to_buy_lots=to_buy_lots
+                    to_buy_lots=to_buy_lots,
+                    target_profit=target_profit,
+                    exit_drawdown=exit_drawdown,
+                    exit_profit_price=MoneyValue(
+                        units=exit_profit_price.units,
+                        nano=exit_profit_price.nano,
+                        currency=position.current_price.currency
+                    ),
+                    exit_loss_price=MoneyValue(
+                        units=exit_loss_price.units,
+                        nano=exit_loss_price.nano,
+                        currency=position.current_price.currency
+                    ),
+                    target_progress=target_progress,
+                    **vars(position)
                 )
             )
             self.portfolio_plan_positions = plan_positions

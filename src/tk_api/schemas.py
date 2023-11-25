@@ -5,8 +5,6 @@ from pydantic import BaseModel
 from tinkoff.invest import AccessLevel, AccountStatus, AccountType, Instrument, InstrumentShort, InstrumentType, MoneyValue, OrderDirection, OrderExecutionReportStatus, OrderType, PortfolioPosition, PortfolioRequest, Quotation, RealExchange, SecurityTradingStatus
 from tinkoff.invest.utils import decimal_to_quotation, money_to_decimal, quotation_to_decimal
 
-# from src.tk_api.service.client import PortfolioService
-
 # from tinkoff.invest import OrderDirection, OrderType
 
 
@@ -254,6 +252,11 @@ class PlanPortfolioPosition(BaseModel):
     # proportion: Decimal
     plan_proportion_in_portfolio: Decimal
     to_buy_lots: Quotation
+    target_profit: Decimal
+    exit_drawdown: Decimal
+    exit_profit_price: MoneyValue
+    exit_loss_price: MoneyValue
+    target_progress: Decimal | None
 
 
 class ApiPortfolioResponse(BaseModel):
