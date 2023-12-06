@@ -249,21 +249,23 @@ class PortfolioService(TinkoffClientService):
             exit_drawdown = Decimal(0.5).quantize(format)
 
             exit_profit_price = decimal_to_quotation(
-                money_to_decimal(position.current_price)
+                money_to_decimal(position.average_position_price)
                 * target_profit
             )
 
             exit_loss_price = decimal_to_quotation(
-                money_to_decimal(position.current_price)
+                money_to_decimal(position.average_position_price)
                 * exit_drawdown
             )
 
             try:
                 if (current := money_to_decimal(position.current_price)) <\
                     money_to_decimal(position.average_position_price):
+
                     target_progress = money_to_decimal(exit_loss_price) /\
                         current * -1
                     print('Loss progress', target_progress, position.ticker)
+
                 else:
                     target_progress = current /\
                         money_to_decimal(exit_profit_price)

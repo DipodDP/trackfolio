@@ -264,6 +264,7 @@ class ApiPortfolioResponse(BaseModel):
     total_amount_bonds: MoneyValue
     total_amount_etf: MoneyValue
     total_amount_currencies: MoneyValue
+    total_additional_cash: MoneyValue
     # total_amount_futures: MoneyValue
     expected_yield: Quotation
     positions: List[ApiPortfolioPosition]

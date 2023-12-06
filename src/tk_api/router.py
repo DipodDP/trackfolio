@@ -57,6 +57,7 @@ async def get_portfolio() -> ApiPortfolioResponse:
         total_amount_etf=client.portfolio.total_amount_etf,
         total_amount_currencies=client.portfolio.total_amount_currencies,
         total_amount_portfolio=client.portfolio.total_amount_portfolio,
+        total_additional_cash=client.total_additional_cash,
         expected_yield=client.portfolio.expected_yield,
         account_id=client.portfolio.account_id,
         # total_amount_gov_bonds=
